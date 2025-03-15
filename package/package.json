@@ -1,0 +1,20 @@
+{
+	"name": "callskit",
+	"version": "0.0.0",
+	"type": "module",
+	"module": "dist/index.cjs",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./react": {
+			"types": "./dist/react/index.d.ts",
+			"default": "./dist/react/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsup"
+	}
+}
