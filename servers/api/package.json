@@ -1,0 +1,15 @@
+{
+	"name": "api-server",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy --minify"
+	},
+	"dependencies": {
+		"hono": "^4.7.4",
+		"partytracks": "^0.0.30"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250214.0",
+		"wrangler": "^4.1.0"
+	}
+}

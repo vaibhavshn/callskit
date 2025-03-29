@@ -1,11 +1,11 @@
 {
 	"workspaces": [
-		"package"
+		"package",
+		"servers/*",
+		"example"
 	],
 	"devDependencies": {
-		"@types/react": "^19.0.10",
 		"prettier": "^3.5.3",
-		"react": "^19.0.0",
 		"tsup": "^8.4.0",
 		"typescript": "^5.8.2"
 	},

@@ -5,5 +5,5 @@ export default defineConfig({
 	format: ['esm'],
 	dts: true,
 	clean: true,
-	external: ['react'],
+	external: ['react', 'partysocket'],
 });

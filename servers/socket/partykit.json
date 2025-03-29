@@ -1,0 +1,6 @@
+{
+	"$schema": "https://www.partykit.io/schema.json",
+	"name": "socket",
+	"main": "src/server.ts",
+	"compatibilityDate": "2025-03-17"
+}
