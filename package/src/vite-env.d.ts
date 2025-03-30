@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-	// more env variables...
+	// env variables
 }
 
 interface ImportMeta {
