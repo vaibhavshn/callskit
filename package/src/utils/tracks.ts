@@ -15,31 +15,35 @@ export function blackCanvasStreamTrack(videoTrack?: MediaStreamTrack) {
 		ctx.fillStyle = 'black';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 	}, 1000);
-	return canvas.captureStream().getVideoTracks()[0];
+	return canvas.captureStream().getVideoTracks()[0]!;
+}
+
+export function getInaudibleTrack() {
+	const audioContext = new AudioContext();
+
+	const oscillator = audioContext.createOscillator();
+	oscillator.type = 'triangle';
+	// roughly sounds like a box fan
+	oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
+
+	const gainNode = audioContext.createGain();
+	// even w/ gain at 0 some packets are sent
+	gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+
+	oscillator.connect(gainNode);
+
+	const destination = audioContext.createMediaStreamDestination();
+	gainNode.connect(destination);
+
+	oscillator.start();
+
+	const track = destination.stream.getAudioTracks()[0]!;
+	return { track, audioContext };
 }
 
 export const inaudibleAudioTrack$ = new Observable<MediaStreamTrack>(
 	(subscriber) => {
-		const audioContext = new AudioContext();
-
-		const oscillator = audioContext.createOscillator();
-		oscillator.type = 'triangle';
-		// roughly sounds like a box fan
-		oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
-
-		const gainNode = audioContext.createGain();
-		// even w/ gain at 0 some packets are sent
-		gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-
-		oscillator.connect(gainNode);
-
-		const destination = audioContext.createMediaStreamDestination();
-		gainNode.connect(destination);
-
-		oscillator.start();
-
-		const track = destination.stream.getAudioTracks()[0]!;
-
+		const { audioContext, track } = getInaudibleTrack();
 		subscriber.next(track);
 		return () => {
 			track.stop();

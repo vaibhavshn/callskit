@@ -44,11 +44,13 @@
 					?.remove();
 			});
 
-			call.self.subscribe('camera_update', () => {
+			call.self.subscribe('cameraUpdate', (updates) => {
+				console.log('self:camtrack', updates);
+
 				if (call.self.cameraEnabled) {
 					window.camera_toggle_btn.textContent = 'Stop Camera';
 					window.self_video.srcObject = new MediaStream([
-						call.self.cameraTrack.value,
+						call.self.cameraTrack,
 					]);
 				} else {
 					window.camera_toggle_btn.textContent = 'Start Camera';
@@ -56,21 +58,25 @@
 				}
 			});
 
-			call.self.cameraTrack.subscribe((track) => {
-				console.log('self:camtrack:', track);
-			});
-
-			call.self.micTrack.subscribe((track) => {
-				console.log('self:mictrack:', track);
+			call.self.subscribe('micUpdate', (track) => {
+				console.log('self:mictrack', track);
 			});
 
 			window.call = call;
 
 			window.toggleCamera = () => {
 				if (!call.self.cameraEnabled) {
-					call.startCamera();
+					call.self.startCamera();
 				} else {
-					call.stopCamera();
+					call.self.stopCamera();
+				}
+			};
+
+			window.toggleMic = () => {
+				if (!call.self.micEnabled) {
+					call.self.startMic();
+				} else {
+					call.self.stopMic();
 				}
 			};
 

@@ -1,4 +1,7 @@
-import { CallClient, type CallClientOptions } from './lib/call-client';
+import {
+	CallClient,
+	type CallClientOptions,
+} from './lib/call-client/call-client';
 
 export function createCallClient(options: CallClientOptions) {
 	return new CallClient(options);

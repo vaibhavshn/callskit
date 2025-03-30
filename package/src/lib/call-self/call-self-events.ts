@@ -1,0 +1,24 @@
+export type ParticipantMediaEvents = {
+	micUpdate: (
+		data:
+			| {
+					micEnabled: true;
+					micTrack: MediaStreamTrack;
+			  }
+			| {
+					micEnabled: false;
+			  },
+	) => void;
+	cameraUpdate: (
+		data:
+			| {
+					cameraEnabled: true;
+					cameraTrack: MediaStreamTrack;
+			  }
+			| {
+					cameraEnabled: false;
+			  },
+	) => void;
+};
+
+export type CallSelfEvents = ParticipantMediaEvents;

@@ -25,6 +25,7 @@
 	"dependencies": {
 		"partysocket": "^1.0.3",
 		"partytracks": "^0.0.31",
-		"rxjs": "^7.8.2"
+		"rxjs": "^7.8.2",
+		"tiny-invariant": "^1.3.3"
 	}
 }

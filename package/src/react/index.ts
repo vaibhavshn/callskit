@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
-import { CallClient, type CallClientOptions } from '../lib/call-client';
+import {
+	CallClient,
+	type CallClientOptions,
+} from '../lib/call-client/call-client';
 
 export function useCreateCall() {
 	const [call, setCall] = useState<CallClient>();

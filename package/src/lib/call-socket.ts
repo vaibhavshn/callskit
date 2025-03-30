@@ -7,6 +7,7 @@ export class CallSocket extends PartySocket {
 	}
 
 	sendAction(action: CallAction) {
+		console.log('CallSocket:sendAction', action)
 		return this.send(JSON.stringify(action));
 	}
 }
