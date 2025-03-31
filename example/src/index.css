@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+@layer base {
+	html,
+	body,
+	#root {
+		height: 100%;
+	}
+}
+@layer components {
+	button {
+		@apply inline-flex items-center gap-1.5;
+		@apply rounded-lg bg-orange-400/20 text-orange-700 text-sm px-3 h-9;
+		@apply transition-all ring-offset-2 ring-2 ring-transparent hover:ring-orange-400;
+		@apply outline-none hover:z-50;
+	}
+}

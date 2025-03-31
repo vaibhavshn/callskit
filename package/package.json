@@ -1,6 +1,7 @@
 {
 	"name": "callskit",
 	"version": "0.0.0",
+	"description": "A client SDK for handling calls using Cloudflare Calls",
 	"type": "module",
 	"sideEffects": false,
 	"main": "dist/index.cjs",
@@ -32,7 +33,7 @@
 		"dist"
 	],
 	"scripts": {
-		"build": "tsup && vite build",
+		"build": "NODE_ENV=production tsup",
 		"build:watch": "tsup --watch",
 		"dev": "vite dev"
 	},
@@ -44,6 +45,7 @@
 	},
 	"devDependencies": {
 		"@types/lodash-es": "^4.17.12",
+		"@types/react": "^18.3.20",
 		"lodash-es": "^4.17.21"
 	}
 }

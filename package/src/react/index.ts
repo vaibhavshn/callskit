@@ -8,7 +8,7 @@ export function useCreateCall() {
 	const [call, setCall] = useState<CallClient>();
 
 	const createCall = useCallback((options: CallClientOptions) => {
-		setCall(new CallClient(options));
+		setCall((prevCall) => (prevCall ? prevCall : new CallClient(options)));
 	}, []);
 
 	return [call, createCall] as const;

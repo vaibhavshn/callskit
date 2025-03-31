@@ -3,6 +3,7 @@ import React from 'react';
 import invariant from 'tiny-invariant';
 import { CallClient } from '../lib/call-client/call-client';
 import { shallow } from './shallow';
+import { EventsHandler } from '../utils/events-handler';
 
 type Callback = () => void;
 
@@ -40,10 +41,12 @@ export function CallProvider({
 
 		call.subscribeAll(onCallback);
 		call.self.subscribeAll(onCallback);
+		call.chat.subscribeAll(onCallback);
 
 		return () => {
 			call.unsubscribeAll(onCallback);
 			call.self.unsubscribeAll(onCallback);
+			call.chat.unsubscribeAll(onCallback);
 		};
 	}, [call]);
 
@@ -71,11 +74,17 @@ export function useCallSelector<CallSlice>(
 
 	const [slice, setSlice] = React.useState(() => selector(call));
 	const prevSlice = React.useRef<CallSlice>(slice);
+	const [, forceUpdate] = React.useReducer((state) => !state, false);
 
 	React.useEffect(() => {
+		if (slice instanceof EventsHandler) {
+			return slice.subscribeAll(forceUpdate);
+		}
+
 		return ctx.subscribe(() => {
 			const next = selector(call);
 			if (!shallow(prevSlice.current, next)) {
+				console.log('found change', prevSlice.current, next);
 				prevSlice.current = next;
 				setSlice(next);
 			}

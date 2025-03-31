@@ -28,12 +28,10 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 	#micEnabled$: BehaviorSubject<boolean>;
 	#micTrackId$: BehaviorSubject<string | undefined>;
 	#micTrack$ = new BehaviorSubject<MediaStreamTrack | undefined>(undefined);
-	#micTrackMetadata = new BehaviorSubject<TrackMetadata>({});
 
 	#cameraEnabled$: BehaviorSubject<boolean>;
 	#cameraTrackId$: BehaviorSubject<string | undefined>;
 	#cameraTrack$ = new BehaviorSubject<MediaStreamTrack | undefined>(undefined);
-	#cameraTrackMetadata = new BehaviorSubject<TrackMetadata>({});
 
 	constructor(options: CallParticipantOptions) {
 		super();
@@ -41,8 +39,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		this.name = options.name;
 
 		this.#ctx = getCurrentCallContext();
-
-		this.#ctx.partyTracks.pull(this.#micTrackMetadata);
 
 		this.#micEnabled$ = new BehaviorSubject<boolean>(
 			options.micEnabled || false,
@@ -62,7 +58,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			.pipe(
 				withLatestFrom(this.#micTrackId$),
 				switchMap(([enabled, trackId]) => {
-					if (enabled) {
+					if (enabled && trackId) {
 						const [sessionId, trackName] = trackId!.split(':');
 						return this.#ctx.partyTracks.pull(
 							of({
@@ -84,12 +80,15 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			)
 			.subscribe({
 				next: ([enabled, track]) => {
-					this.#micTrack$.next(track);
-					console.log('pulled', { enabled, track });
-					if (enabled) {
-						this.emit('micUpdate', { micEnabled: true, micTrack: track! });
+					this.#ctx.logger.debug('pulled', { enabled, track });
+					if (enabled && track) {
+						this.#micTrack$.next(track);
+						this.emit('micUpdate', { micEnabled: true, micTrack: track });
+						this.#ctx.participants.emit('micUpdate', this);
 					} else {
+						this.#micTrack$.next(undefined);
 						this.emit('micUpdate', { micEnabled: false });
+						this.#ctx.participants.emit('micUpdate', this);
 					}
 				},
 			});
@@ -98,8 +97,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			.pipe(
 				withLatestFrom(this.#cameraTrackId$),
 				switchMap(([enabled, trackId]) => {
-					if (enabled) {
-						const [sessionId, trackName] = trackId!.split(':');
+					if (enabled && trackId) {
+						const [sessionId, trackName] = trackId.split(':');
 						return this.#ctx.partyTracks.pull(
 							of({
 								sessionId,
@@ -120,15 +119,18 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			)
 			.subscribe({
 				next: ([cameraEnabled, cameraTrack]) => {
-					this.#cameraTrack$.next(cameraTrack);
-					console.log('pulled', { enabled: cameraEnabled, track: cameraTrack });
+					this.#ctx.logger.debug('pulled', { enabled: cameraEnabled, track: cameraTrack });
 					if (cameraEnabled && cameraTrack) {
+						this.#cameraTrack$.next(cameraTrack);
 						this.emit('cameraUpdate', {
 							cameraEnabled,
 							cameraTrack,
 						});
+						this.#ctx.participants.emit('cameraUpdate', this);
 					} else {
+						this.#cameraTrack$.next(undefined);
 						this.emit('cameraUpdate', { cameraEnabled: false });
+						this.#ctx.participants.emit('cameraUpdate', this);
 					}
 				},
 			});
@@ -143,7 +145,10 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		}
 	}
 
-	updateCameraState(updates: { cameraEnabled: boolean; cameraTrackId?: string }) {
+	updateCameraState(updates: {
+		cameraEnabled: boolean;
+		cameraTrackId?: string;
+	}) {
 		if (updates.cameraEnabled && updates.cameraTrackId) {
 			this.#cameraTrackId$.next(updates.cameraTrackId);
 			this.#cameraEnabled$.next(true);

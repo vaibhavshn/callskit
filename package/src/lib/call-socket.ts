@@ -1,13 +1,18 @@
 import PartySocket, { type PartySocketOptions } from 'partysocket';
 import type { CallAction } from '../types/call-socket';
+import { getCurrentCallContext, type CallContext } from './call-context';
+import type { Logger } from '../utils/logger';
 
 export class CallSocket extends PartySocket {
-	constructor(options: PartySocketOptions) {
+	#logger: Logger;
+
+	constructor(options: PartySocketOptions & { logger: Logger }) {
 		super(options);
+		this.#logger = options.logger;
 	}
 
 	sendAction(action: CallAction) {
-		console.log('CallSocket:sendAction', action)
+		this.#logger.debug('CallSocket:sendAction', action);
 		return this.send(JSON.stringify(action));
 	}
 }

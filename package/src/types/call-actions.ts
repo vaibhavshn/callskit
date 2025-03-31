@@ -1,3 +1,6 @@
+import type {
+	ChatMessagePayload,
+} from '../lib/call-chat/call-chat';
 import type { SerializedUser } from './call-socket';
 
 export type MediaAction =
@@ -17,10 +20,16 @@ export type MediaAction =
 			};
 	  };
 
+export type ChatAction = {
+	action: 'chat/message';
+	message: ChatMessagePayload;
+};
+
 export type CallAction =
 	| {
 			action: 'join';
 			self: SerializedUser;
 	  }
 	| { action: 'leave' }
-	| MediaAction;
+	| MediaAction
+	| ChatAction;

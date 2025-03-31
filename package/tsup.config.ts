@@ -1,5 +1,17 @@
 import { defineConfig } from 'tsup';
 
+let env = {
+	SOCKET_URL: 'http://localhost:1999',
+	API_URL: 'http://localhost:8787',
+};
+
+if (process.env.NODE_ENV === 'production') {
+	env = {
+		SOCKET_URL: 'https://callskit.vaibhavshn.partykit.dev',
+		API_URL: 'https://callskit.workers.dev',
+	};
+}
+
 export default defineConfig([
 	{
 		entry: {
@@ -10,6 +22,7 @@ export default defineConfig([
 		dts: true,
 		clean: true,
 		treeshake: true,
+		env: env,
 		external: ['react', 'partysocket', 'partytracks', 'rxjs'],
 	},
 ]);

@@ -170,23 +170,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				},
 			});
 
-		// this.#micEnabled$.pipe(
-		// 	withLatestFrom(this.#micTrackId$),
-		// 	map(([micEnabled, micTrackId]) => {
-		// 		if (micTrackId && micEnabled) {
-		// 			this.#ctx.socket.sendAction({
-		// 				action: 'self/mic-update',
-		// 				updates: { micEnabled, micTrackId },
-		// 			});
-		// 		} else if (!micEnabled) {
-		// 			this.#ctx.socket.sendAction({
-		// 				action: 'self/mic-update',
-		// 				updates: { micEnabled },
-		// 			});
-		// 		}
-		// 	}),
-		// );
-
 		if (options.defaults?.audio === true) {
 			this.#micEnabled$.next(true);
 		}

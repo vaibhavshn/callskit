@@ -1,18 +1,22 @@
 import type * as Party from 'partykit/server';
 import { createEvent, parseAction } from './helpers';
 import type { User } from './types';
+import type { ChatMessage } from 'callskit';
 
 export default class Server implements Party.Server {
 	started_at!: Date;
 
 	users: User[] = [];
 
+	chat: ChatMessage[] = [];
+
 	constructor(readonly room: Party.Room) {}
 
 	async onStart() {
 		this.clearUsers();
-		this.users = (await this.room.storage.get<User[]>('users')) ?? [];
 		this.started_at = new Date();
+		this.users = (await this.room.storage.get<User[]>('users')) ?? [];
+		this.chat = (await this.room.storage.get<ChatMessage[]>('chat')) ?? [];
 	}
 
 	onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
@@ -34,12 +38,13 @@ export default class Server implements Party.Server {
 			case 'join': {
 				const user: User = { ...payload.self, connectionId: sender.id };
 				const without = this.getConnectionIds([sender.id]);
-				console.log(without, sender.id);
+				console.log('join', without, sender.id);
 				this.room.broadcast(
 					createEvent({
 						event: 'room/init',
 						participants: this.users,
 						started_at: this.started_at.toISOString(),
+						chatMessages: this.chat,
 					}),
 					without,
 				);
@@ -103,6 +108,24 @@ export default class Server implements Party.Server {
 				}
 				break;
 			}
+
+			case 'chat/message': {
+				const user = this.getUser(sender.id);
+				if (user) {
+					const message = {
+						...payload.message,
+						id: crypto.randomUUID(),
+						display_name: user.name,
+						user_id: user.id,
+						created_at: new Date(),
+					};
+					this.chat.push(message);
+					this.room.broadcast(
+						createEvent({ event: 'chat/new-message', message }),
+					);
+				}
+				break;
+			}
 		}
 	}
 
@@ -113,6 +136,10 @@ export default class Server implements Party.Server {
 			this.room.broadcast(
 				createEvent({ event: 'participant/left', participantId: user.id }),
 			);
+		}
+
+		if (this.users.length === 0) {
+			this.room.storage.put<ChatMessage[]>('chat', this.chat);
 		}
 	}
 

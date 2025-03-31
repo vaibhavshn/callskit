@@ -1,10 +1,16 @@
+import type { ChatMessage } from '../lib/call-chat/call-chat';
 import type { SerializedUser } from './call-socket';
 
 export type RoomEvent =
 	| {
 			event: 'connected';
 	  }
-	| { event: 'room/init'; participants: SerializedUser[]; started_at: string };
+	| {
+			event: 'room/init';
+			participants: SerializedUser[];
+			started_at: string;
+			chatMessages: ChatMessage[];
+	  };
 
 export type ParticipantEvent =
 	| { event: 'participant/joined'; participant: SerializedUser }
@@ -26,4 +32,6 @@ export type ParticipantEvent =
 			};
 	  };
 
-export type CallEvent = RoomEvent | ParticipantEvent;
+export type ChatEvent = { event: 'chat/new-message'; message: ChatMessage };
+
+export type CallEvent = RoomEvent | ParticipantEvent | ChatEvent;

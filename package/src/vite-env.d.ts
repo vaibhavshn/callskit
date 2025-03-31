@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-	// env variables
+	SOCKET_URL: string;
+	API_URL: string;
 }
 
 interface ImportMeta {

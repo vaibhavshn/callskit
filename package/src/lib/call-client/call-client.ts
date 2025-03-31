@@ -1,4 +1,4 @@
-import { PartyTracks, resilientTrack$ } from 'partytracks/client';
+import { PartyTracks } from 'partytracks/client';
 import type { CallEvent } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import { runWithContext, type CallContext } from '../call-context';
@@ -6,6 +6,9 @@ import { CallParticipant } from '../call-participant/call-participant';
 import { CallSelf } from '../call-self/call-self';
 import { CallSocket } from '../call-socket';
 import type { CallClientEvents } from './call-client-events';
+import { CallParticipantMap } from '../participant-map';
+import { Logger, type LogLevel } from '../../utils/logger';
+import { CallChat } from '../call-chat/call-chat';
 
 export type CallClientOptions = {
 	room: string;
@@ -14,37 +17,48 @@ export type CallClientOptions = {
 		audio?: boolean;
 		video?: boolean;
 	};
+	logLevel?: LogLevel;
 };
 
 export class CallClient extends EventsHandler<CallClientEvents> {
 	started_at!: Date;
-
 	room: string;
-	self: CallSelf;
-	participants: CallParticipant[];
 	state: undefined | 'connected' | 'joined' = undefined;
 
+	self: CallSelf;
+	participants = new CallParticipantMap();
+	chat: CallChat;
+
 	#ctx: CallContext;
+	#logger: Logger;
 
 	constructor(options: CallClientOptions) {
 		super();
 		this.room = options.room;
-		this.participants = [];
+
+		this.#logger = new Logger({
+			level: options.logLevel ?? 'warn',
+			prefix: 'CallClient',
+		});
 
 		const socket = new CallSocket({
 			room: this.room,
-			host: 'http://localhost:1999',
+			host: import.meta.env.SOCKET_URL,
+			logger: this.#logger,
 		});
 
 		socket.addEventListener('message', this.onMessage.bind(this));
 
 		const partyTracks = new PartyTracks({
-			prefix: 'http://localhost:8787/partytracks',
+			prefix: import.meta.env.API_URL + '/partytracks',
 		});
+
 
 		const context: CallContext = {
 			socket,
 			partyTracks,
+			participants: this.participants,
+			logger: this.#logger,
 		};
 
 		this.#ctx = context;
@@ -53,11 +67,11 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			() =>
 				new CallSelf({ name: options.displayName, defaults: options.defaults }),
 		);
+		this.chat = this.runWithContext(() => new CallChat());
 	}
 
 	join() {
 		if (this.state !== 'connected') return;
-		console.log('joining room');
 		this.#ctx.socket.sendAction({ action: 'join', self: this.self.toJSON() });
 	}
 
@@ -68,61 +82,66 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 
 	private onMessage(event: MessageEvent<string>) {
 		const ev: CallEvent = JSON.parse(event.data);
-		console.log(ev);
+		this.#logger.info('CallSocket:Event', ev);
+
 		switch (ev.event) {
 			case 'connected':
 				this.state = 'connected';
 				this.emit('connected');
 				break;
+
 			case 'room/init': {
+				if (this.state !== 'connected') return;
+
 				const user_objects = ev.participants;
-				const users = this.runWithContext(() =>
+				this.runWithContext(() =>
 					user_objects.map((obj) => CallParticipant.fromJSON(obj)),
-				);
-				this.participants = users;
+				).forEach((participant) => {
+					this.participants.set(participant.id, participant);
+				});
 				this.started_at = new Date(ev.started_at);
+				this.chat.addMessagesInBulk(ev.chatMessages);
 				this.state = 'joined';
 				this.emit('joined');
 				break;
 			}
+
 			case 'participant/joined': {
 				const participant = this.runWithContext(() =>
 					CallParticipant.fromJSON(ev.participant),
 				);
-				this.participants = [...this.participants, participant];
-				this.emit('participantJoined', participant);
+				this.participants.set(participant.id, participant);
 				break;
 			}
+
 			case 'participant/left': {
 				const participantId = ev.participantId;
-				const participant = this.participants.find(
-					(p) => p.id === participantId,
-				);
+				const participant = this.participants.get(participantId);
 				if (participant) {
-					this.participants = this.participants.filter(
-						(p) => p.id !== participantId,
-					);
-					this.emit('participantLeft', participant);
+					this.participants.delete(participantId);
 				}
 				break;
 			}
+
 			case 'participant/mic-update': {
 				const { participantId, ...updates } = ev.data;
-				const participant = this.getParticipantById(participantId);
+				const participant = this.participants.get(participantId);
 				participant?.updateMicState(updates);
 				break;
 			}
+
 			case 'participant/camera-update': {
 				const { participantId, ...updates } = ev.data;
-				const participant = this.getParticipantById(participantId);
+				const participant = this.participants.get(participantId);
 				participant?.updateCameraState(updates);
 				break;
 			}
-		}
-	}
 
-	getParticipantById(pid: string) {
-		return this.participants.find((p) => p.id === pid);
+			case 'chat/new-message': {
+				this.chat.addMessage(ev.message);
+				break;
+			}
+		}
 	}
 
 	private runWithContext<T>(fn: () => T): T {
