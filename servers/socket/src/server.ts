@@ -10,6 +10,8 @@ export default class Server implements Party.Server {
 
 	chat: ChatMessage[] = [];
 
+	connectionIds = new Set<string>();
+
 	constructor(readonly room: Party.Room) {}
 
 	async onStart() {
@@ -26,7 +28,7 @@ export default class Server implements Party.Server {
   room: ${this.room.id}
   url: ${new URL(ctx.request.url).pathname}`,
 		);
-
+		this.connectionIds.add(conn.id);
 		conn.send(createEvent({ event: 'connected' }));
 	}
 
@@ -130,6 +132,7 @@ export default class Server implements Party.Server {
 	}
 
 	onClose(connection: Party.Connection): void | Promise<void> {
+		this.connectionIds.delete(connection.id);
 		const user = this.users.find((user) => user.connectionId === connection.id);
 		if (user) {
 			this.removeUser(connection.id);
@@ -150,6 +153,7 @@ export default class Server implements Party.Server {
 	async addUser(user: User) {
 		console.log(`addUser:${user.id}:${user.name}`);
 		this.users.push(user);
+		this.connectionIds.delete(user.connectionId);
 		return this.room.storage.put<User[]>('users', this.users);
 	}
 
@@ -175,7 +179,10 @@ export default class Server implements Party.Server {
 	}
 
 	getConnectionIds(exclude?: string[]) {
-		const ids = this.users.map((u) => u.connectionId);
+		const ids = [
+			...this.users.map((u) => u.connectionId),
+			...this.connectionIds.values(),
+		];
 		if (exclude) {
 			return ids.filter((id) => !exclude.includes(id));
 		}

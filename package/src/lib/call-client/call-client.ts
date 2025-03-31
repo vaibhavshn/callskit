@@ -9,7 +9,7 @@ import type { CallClientEvents } from './call-client-events';
 import { CallParticipantMap } from '../participant-map';
 import { Logger, type LogLevel } from '../../utils/logger';
 import { CallChat } from '../call-chat/call-chat';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, fromEvent } from 'rxjs';
 
 export type CallClientOptions = {
 	room: string;
@@ -70,6 +70,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			() =>
 				new CallSelf({ name: options.displayName, defaults: options.defaults }),
 		);
+
 		this.chat = this.runWithContext(() => new CallChat());
 	}
 

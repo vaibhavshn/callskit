@@ -1,6 +1,5 @@
 import PartySocket, { type PartySocketOptions } from 'partysocket';
 import type { CallAction } from '../types/call-socket';
-import { getCurrentCallContext, type CallContext } from './call-context';
 import type { Logger } from '../utils/logger';
 
 export class CallSocket extends PartySocket {

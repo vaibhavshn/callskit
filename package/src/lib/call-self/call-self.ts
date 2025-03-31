@@ -130,6 +130,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 								constraints: {
 									echoCancellation: true,
 									autoGainControl: true,
+									noiseSuppression: true,
 								},
 							})
 						: inaudibleAudioTrack$;

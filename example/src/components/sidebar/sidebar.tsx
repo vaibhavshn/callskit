@@ -1,7 +1,7 @@
 import { useCall, useCallSelector } from 'callskit/react';
 import { useMeetingStore } from '../../data/meeting-store';
 import clsx from 'clsx';
-import { DismissRegular } from '@fluentui/react-icons';
+import { DismissFilled, DismissRegular } from '@fluentui/react-icons';
 import { HTMLMotionProps, motion } from 'motion/react';
 import { ChatMessage } from 'callskit';
 
@@ -28,12 +28,12 @@ export function Sidebar({ className, ...props }: SidebarProps) {
 			{store.sidebar === 'chat' && <Chat />}
 
 			<button
-				className="absolute right-2 top-2 z-10 bg-zinc-100 rounded-md"
+				className="absolute right-2 top-2 z-10 size-6 hover:bg-zinc-100 transition-colors text-zinc-400 flex items-center justify-center rounded-md"
 				onClick={() => {
 					store.setSidebar(undefined);
 				}}
 			>
-				<DismissRegular className="size-4" />
+				<DismissFilled className="size-4" />
 			</button>
 		</motion.div>
 	);
@@ -51,11 +51,11 @@ function Chat() {
 
 	return (
 		<div className="flex flex-col size-full">
-			<div className="h-12 flex items-center px-3">
-				<h3 className="text-lg">Chat</h3>
+			<div className="h-14 flex items-center px-3">
+				<h3 className="">Chat</h3>
 			</div>
 
-			<div className="grow px-2 flex flex-col">
+			<div className="grow px-2 flex flex-col overflow-y-auto py-2">
 				{messages.map((message) => {
 					const isContinued = lastMessage
 						? lastMessage.user_id === message.user_id &&

@@ -8,6 +8,7 @@ import {
 import { useCall, useCallSelector } from 'callskit/react';
 import { useCallback } from 'react';
 import { useMeetingStore } from '../data/meeting-store';
+import { ButtonProps, ControlbarButton } from './primitives/button';
 
 export function MicToggle() {
 	const call = useCall();
@@ -21,9 +22,9 @@ export function MicToggle() {
 	}, []);
 
 	return (
-		<button onClick={toggleMic} className="*:size-6 h-full">
+		<ControlbarButton onClick={toggleMic}>
 			{micEnabled ? <MicRegular /> : <MicOffRegular />}
-		</button>
+		</ControlbarButton>
 	);
 }
 
@@ -39,25 +40,26 @@ export function CameraToggle() {
 	}, []);
 
 	return (
-		<button onClick={toggleCamera} className="*:size-6 h-full">
+		<ControlbarButton onClick={toggleCamera}>
 			{cameraEnabled ? <VideoRegular /> : <VideoOffRegular />}
-		</button>
+		</ControlbarButton>
 	);
 }
 
-export function ChatToggle() {
+export function ChatToggle(props: ButtonProps) {
 	const store = useMeetingStore();
 
 	const chatOpen = store.sidebar === 'chat';
 
 	return (
-		<button
+		<ControlbarButton
 			onClick={() => {
 				store.setSidebar(chatOpen ? undefined : 'chat');
 			}}
-			className="*:size-6 h-full"
+			data-active={chatOpen ? true : undefined}
+			{...props}
 		>
 			<ChatRegular />
-		</button>
+		</ControlbarButton>
 	);
 }

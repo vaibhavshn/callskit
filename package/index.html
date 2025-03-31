@@ -11,76 +11,84 @@
 		/>
 
 		<script type="module">
-			import { createCallClient } from './src/index.ts';
-
-			const call = createCallClient({
-				room: 'abc-xyz',
-				displayName: 'Vaibhav',
-				// defaults: { audio: true, video: true },
+			import { EventsHandler } from './src/utils/events-handler';
+			const e = new EventsHandler();
+			e.addEventListener('test', (...args) => {
+				console.log('test', ...args);
 			});
 
-			call.subscribe('connected', () => {
-				call.join();
-			});
+			window.e = e;
 
-			function addParticipant(participant) {
-				const $el = document.createElement('li');
-				$el.setAttribute('data-participant-id', participant.id);
-				$el.textContent = participant.name;
-				document.querySelector('#participants-list').appendChild($el);
-			}
+			// import { createCallClient } from './src/index.ts';
 
-			call.subscribe('joined', () => {
-				for (const p of call.participants) {
-					addParticipant(p);
-				}
-			});
+			// const call = createCallClient({
+			// 	room: 'abc-xyz',
+			// 	displayName: 'Vaibhav',
+			// 	// defaults: { audio: true, video: true },
+			// });
 
-			call.subscribe('participant_joined', addParticipant);
+			// call.subscribe('connected', () => {
+			// 	call.join();
+			// });
 
-			call.subscribe('participant_left', (participant) => {
-				document
-					.querySelector(`li[data-participant-id="${participant.id}"`)
-					?.remove();
-			});
+			// function addParticipant(participant) {
+			// 	const $el = document.createElement('li');
+			// 	$el.setAttribute('data-participant-id', participant.id);
+			// 	$el.textContent = participant.name;
+			// 	document.querySelector('#participants-list').appendChild($el);
+			// }
 
-			call.self.subscribe('cameraUpdate', (updates) => {
-				console.log('self:camtrack', updates);
+			// call.subscribe('joined', () => {
+			// 	for (const p of call.participants) {
+			// 		addParticipant(p);
+			// 	}
+			// });
 
-				if (call.self.cameraEnabled) {
-					window.camera_toggle_btn.textContent = 'Stop Camera';
-					window.self_video.srcObject = new MediaStream([
-						call.self.cameraTrack,
-					]);
-				} else {
-					window.camera_toggle_btn.textContent = 'Start Camera';
-					window.self_video.srcObject = undefined;
-				}
-			});
+			// call.subscribe('participant_joined', addParticipant);
 
-			call.self.subscribe('micUpdate', (track) => {
-				console.log('self:mictrack', track);
-			});
+			// call.subscribe('participant_left', (participant) => {
+			// 	document
+			// 		.querySelector(`li[data-participant-id="${participant.id}"`)
+			// 		?.remove();
+			// });
 
-			window.call = call;
+			// call.self.subscribe('cameraUpdate', (updates) => {
+			// 	console.log('self:camtrack', updates);
 
-			window.toggleCamera = () => {
-				if (!call.self.cameraEnabled) {
-					call.self.startCamera();
-				} else {
-					call.self.stopCamera();
-				}
-			};
+			// 	if (call.self.cameraEnabled) {
+			// 		window.camera_toggle_btn.textContent = 'Stop Camera';
+			// 		window.self_video.srcObject = new MediaStream([
+			// 			call.self.cameraTrack,
+			// 		]);
+			// 	} else {
+			// 		window.camera_toggle_btn.textContent = 'Start Camera';
+			// 		window.self_video.srcObject = undefined;
+			// 	}
+			// });
 
-			window.toggleMic = () => {
-				if (!call.self.micEnabled) {
-					call.self.startMic();
-				} else {
-					call.self.stopMic();
-				}
-			};
+			// call.self.subscribe('micUpdate', (track) => {
+			// 	console.log('self:mictrack', track);
+			// });
 
-			console.log(performance);
+			// window.call = call;
+
+			// window.toggleCamera = () => {
+			// 	if (!call.self.cameraEnabled) {
+			// 		call.self.startCamera();
+			// 	} else {
+			// 		call.self.stopCamera();
+			// 	}
+			// };
+
+			// window.toggleMic = () => {
+			// 	if (!call.self.micEnabled) {
+			// 		call.self.startMic();
+			// 	} else {
+			// 		call.self.stopMic();
+			// 	}
+			// };
+
+			// console.log(performance);
 		</script>
 	</head>
 	<body>
