@@ -99,12 +99,14 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				switchMap(([enabled, trackId]) => {
 					if (enabled && trackId) {
 						const [sessionId, trackName] = trackId.split(':');
+
 						return this.#ctx.partyTracks.pull(
 							of({
 								sessionId,
 								trackName,
 								location: 'remote',
 							} satisfies TrackMetadata),
+							{ simulcast: { preferredRid$: this.#ctx.cameraRid$ } },
 						);
 					} else {
 						return of(undefined);
@@ -119,7 +121,10 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			)
 			.subscribe({
 				next: ([cameraEnabled, cameraTrack]) => {
-					this.#ctx.logger.debug('pulled', { enabled: cameraEnabled, track: cameraTrack });
+					this.#ctx.logger.debug('pulled', {
+						enabled: cameraEnabled,
+						track: cameraTrack,
+					});
 					if (cameraEnabled && cameraTrack) {
 						this.#cameraTrack$.next(cameraTrack);
 						this.emit('cameraUpdate', {

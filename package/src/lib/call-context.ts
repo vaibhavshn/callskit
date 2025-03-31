@@ -1,14 +1,17 @@
 import type { PartyTracks } from 'partytracks/client';
-import type { CallSocket } from './call-socket';
+import type { BehaviorSubject } from 'rxjs';
 import invariant from 'tiny-invariant';
-import type { CallParticipantMap } from './participant-map';
 import type { Logger } from '../utils/logger';
+import type { CameraRID } from './call-self/call-self';
+import type { CallSocket } from './call-socket';
+import type { CallParticipantMap } from './participant-map';
 
 export type CallContext = {
 	socket: CallSocket;
 	partyTracks: PartyTracks;
 	participants: CallParticipantMap;
 	logger: Logger;
+	cameraRid$: BehaviorSubject<CameraRID>;
 };
 
 const contextStack: CallContext[] = [];

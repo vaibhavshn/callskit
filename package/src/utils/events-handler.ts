@@ -26,7 +26,7 @@ export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
 		event: K extends string ? K : never,
 		callback: TEventsMap[K],
 	) {
-		const callbacks = this.#callbacksMap.get(event) || new Set();
+		const callbacks = this.#callbacksMap.get(event) ?? new Set();
 		callbacks.add(callback);
 		this.#callbacksMap.set(event as string, callbacks);
 		return () => {

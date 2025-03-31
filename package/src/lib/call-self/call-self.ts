@@ -1,34 +1,31 @@
+import { resilientTrack$ } from 'partytracks/client';
 import {
 	BehaviorSubject,
 	combineLatest,
 	distinctUntilChanged,
-	distinctUntilKeyChanged,
 	map,
 	of,
 	skip,
 	switchMap,
-	tap,
 	withLatestFrom,
 } from 'rxjs';
+import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
-import { resilientTrack$ } from 'partytracks/client';
 import {
 	blackCanvasStreamTrack,
 	getInaudibleTrack,
 	inaudibleAudioTrack$,
 } from '../../utils/tracks';
 import { type CallClientOptions } from '../call-client/call-client';
-import type {
-	CallSelfEvents,
-	ParticipantMediaEvents,
-} from './call-self-events';
 import { getCurrentCallContext, type CallContext } from '../call-context';
-import type { SerializedUser } from '../../types/call-socket';
+import type { CallSelfEvents } from './call-self-events';
 
 export type CallSelfOptions = {
 	name: string;
 	defaults: CallClientOptions['defaults'];
 };
+
+export type CameraRID = 'f' | 'h' | 'q';
 
 export class CallSelf extends EventsHandler<CallSelfEvents> {
 	id: string = crypto.randomUUID();
@@ -89,17 +86,40 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				}
 			});
 
-		this.#ctx.partyTracks.push(this.#micTrack$).subscribe((metadata) => {
-			const trackId = `${metadata.sessionId}:${metadata.trackName}`;
-			console.log('pushed mic id', { trackId });
-			this.#micTrackId$.next(trackId);
-		});
+		this.#ctx.partyTracks.peerConnection$.subscribe((pc) => {});
+		this.#ctx.partyTracks
+			.push(this.#micTrack$, {
+				sendEncodings: [{ maxBitrate: 64_000, networkPriority: 'high' }],
+			})
+			.subscribe((metadata) => {
+				const trackId = `${metadata.sessionId}:${metadata.trackName}`;
+				console.log('pushed mic id', { trackId });
+				this.#micTrackId$.next(trackId);
+			});
 
-		this.#ctx.partyTracks.push(this.#cameraTrack$).subscribe((metadata) => {
-			const trackId = `${metadata.sessionId}:${metadata.trackName}`;
-			console.log('pushed camera id', { trackId });
-			this.#cameraTrackId$.next(trackId);
-		});
+		console.log('PUSHE');
+		this.#ctx.partyTracks
+			.push(this.#cameraTrack$, {
+				sendEncodings: [
+					{
+						rid: 'q' satisfies CameraRID, // Low quality
+						scaleResolutionDownBy: 4.0,
+					},
+					{
+						rid: 'h' satisfies CameraRID, // Medium quality
+						scaleResolutionDownBy: 2.0,
+					},
+					{
+						rid: 'f' satisfies CameraRID, // Full quality
+						scaleResolutionDownBy: 1.0,
+					},
+				],
+			})
+			.subscribe((metadata) => {
+				const trackId = `${metadata.sessionId}:${metadata.trackName}`;
+				console.log('pushed camera id', { trackId });
+				this.#cameraTrackId$.next(trackId);
+			});
 
 		this.#micEnabled$
 			.pipe(
@@ -141,8 +161,8 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 						? resilientTrack$({
 								kind: 'videoinput',
 								constraints: {
-									width: { ideal: 1280, max: 1920 },
-									height: { ideal: 720, max: 1080 },
+									width: { ideal: 1280 },
+									height: { ideal: 720 },
 									aspectRatio: 16 / 9,
 									frameRate: 24,
 									backgroundBlur: true,

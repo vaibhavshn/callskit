@@ -3,12 +3,13 @@ import type { CallEvent } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import { runWithContext, type CallContext } from '../call-context';
 import { CallParticipant } from '../call-participant/call-participant';
-import { CallSelf } from '../call-self/call-self';
+import { CallSelf, type CameraRID } from '../call-self/call-self';
 import { CallSocket } from '../call-socket';
 import type { CallClientEvents } from './call-client-events';
 import { CallParticipantMap } from '../participant-map';
 import { Logger, type LogLevel } from '../../utils/logger';
 import { CallChat } from '../call-chat/call-chat';
+import { BehaviorSubject } from 'rxjs';
 
 export type CallClientOptions = {
 	room: string;
@@ -23,7 +24,7 @@ export type CallClientOptions = {
 export class CallClient extends EventsHandler<CallClientEvents> {
 	started_at!: Date;
 	room: string;
-	state: undefined | 'connected' | 'joined' = undefined;
+	state: undefined | 'connected' | 'joined' | 'left' = undefined;
 
 	self: CallSelf;
 	participants = new CallParticipantMap();
@@ -53,13 +54,15 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			prefix: import.meta.env.API_URL + '/partytracks',
 		});
 
-
 		const context: CallContext = {
 			socket,
 			partyTracks,
 			participants: this.participants,
 			logger: this.#logger,
+			cameraRid$: new BehaviorSubject<CameraRID>('f'),
 		};
+
+		Object.assign(window, { rid: context.cameraRid$ });
 
 		this.#ctx = context;
 
@@ -78,6 +81,8 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 	leave() {
 		this.#ctx.socket.sendAction({ action: 'leave' });
 		this.#ctx.socket.close();
+		this.state = 'left';
+		this.emit('left');
 	}
 
 	private onMessage(event: MessageEvent<string>) {
