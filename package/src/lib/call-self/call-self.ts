@@ -3,10 +3,12 @@ import {
 	BehaviorSubject,
 	combineLatest,
 	distinctUntilChanged,
+	filter,
 	map,
 	of,
 	skip,
 	switchMap,
+	tap,
 	withLatestFrom,
 } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
@@ -62,7 +64,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				} else if (!micEnabled) {
 					this.#ctx.socket.sendAction({
 						action: 'self/mic-update',
-						updates: { micEnabled: false },
+						updates: { micEnabled: false, micTrackId: undefined },
 					});
 				}
 			});
@@ -81,12 +83,11 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				} else if (!cameraEnabled) {
 					this.#ctx.socket.sendAction({
 						action: 'self/camera-update',
-						updates: { cameraEnabled: false },
+						updates: { cameraEnabled: false, cameraTrackId: undefined },
 					});
 				}
 			});
 
-		this.#ctx.partyTracks.peerConnection$.subscribe((pc) => {});
 		this.#ctx.partyTracks
 			.push(this.#micTrack$, {
 				sendEncodings: [{ maxBitrate: 64_000, networkPriority: 'high' }],
@@ -97,7 +98,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				this.#micTrackId$.next(trackId);
 			});
 
-		console.log('PUSHE');
 		this.#ctx.partyTracks
 			.push(this.#cameraTrack$, {
 				sendEncodings: [
@@ -143,6 +143,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			)
 			.subscribe({
 				next: ([micEnabled, micTrack]) => {
+					console.log('local mic track', { micEnabled, micTrack });
 					this.#micTrack$.next(micTrack);
 					if (micEnabled) {
 						this.emit('micUpdate', { micEnabled, micTrack });
@@ -151,7 +152,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					}
 				},
 				error: (e: Error) => {
-					console.log('error getting track', e);
+					console.log('error getting local mic track', e);
 				},
 			});
 
@@ -179,6 +180,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			)
 			.subscribe({
 				next: ([cameraEnabled, cameraTrack]) => {
+					console.log('local camera track', { cameraEnabled, cameraTrack });
 					this.#cameraTrack$.next(cameraTrack);
 					if (cameraEnabled) {
 						this.emit('cameraUpdate', { cameraEnabled, cameraTrack });
@@ -187,7 +189,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					}
 				},
 				error: (e: Error) => {
-					console.log('error getting track', e);
+					console.log('error getting local camera track', e);
 				},
 			});
 
@@ -205,6 +207,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	stopMic() {
 		this.#micEnabled$.next(false);
+		this.#cameraTrackId$.next(undefined);
 	}
 
 	startCamera() {
@@ -213,6 +216,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	stopCamera() {
 		this.#cameraEnabled$.next(false);
+		this.#cameraTrackId$.next(undefined);
 	}
 
 	get micEnabled() {

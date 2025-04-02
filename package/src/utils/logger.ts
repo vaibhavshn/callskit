@@ -37,7 +37,6 @@ export class Logger {
 	}
 
 	debug(...args: any[]) {
-		console.log('shouldLog', this.shouldLog('debug'));
 		if (this.shouldLog('debug')) {
 			console.debug(...this.formatMessage('debug', args));
 		}

@@ -18,10 +18,12 @@ function App() {
 
 	useEffect(() => {
 		createCall({
-			room: 'abc-xyz',
-			displayName: 'Vaibhav',
-			defaults: { audio: true, video: true },
+			room: 'abc-xyz-2',
+			displayName: 'User ' + Math.random().toString(36).substring(7),
 			logLevel: 'debug',
+			// defaults: { audio: true, video: true },
+			config: { maxOnStageParticipants: 3, preferredCameraQuality: 'h' },
+			autoJoin: true,
 		});
 	}, [createCall]);
 

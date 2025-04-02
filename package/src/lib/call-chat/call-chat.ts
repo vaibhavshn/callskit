@@ -38,7 +38,7 @@ export class CallChat extends EventsHandler<CallChatEvents> {
 	}
 
 	sendTextMessage(message: string) {
-		this.#sendMessage({ type: 'text', message });
+		this.#sendMessage({ type: 'text', message: message.trim() });
 	}
 
 	#sendMessage(message: ChatMessagePayload) {

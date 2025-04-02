@@ -28,7 +28,7 @@ const compareEntries = (
 };
 
 // Ordered iterables
-const compareIterables = (
+export const compareIterables = (
 	valueA: Iterable<unknown>,
 	valueB: Iterable<unknown>,
 ) => {

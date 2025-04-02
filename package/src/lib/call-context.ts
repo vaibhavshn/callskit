@@ -4,14 +4,17 @@ import invariant from 'tiny-invariant';
 import type { Logger } from '../utils/logger';
 import type { CameraRID } from './call-self/call-self';
 import type { CallSocket } from './call-socket';
-import type { CallParticipantMap } from './participant-map';
+import type { CallClient } from './call-client/call-client';
 
 export type CallContext = {
 	socket: CallSocket;
 	partyTracks: PartyTracks;
-	participants: CallParticipantMap;
+	call: CallClient;
 	logger: Logger;
 	cameraRid$: BehaviorSubject<CameraRID>;
+	volumeContext: AudioContext;
+	maxOnStageParticipants: number;
+	onError?: (error: Error) => void;
 };
 
 const contextStack: CallContext[] = [];

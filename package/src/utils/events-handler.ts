@@ -1,8 +1,6 @@
-import { fromEvent } from 'rxjs';
-
 type Callback = (...args: any[]) => void;
 
-type BaseEventsMap = {
+export type BaseEventsMap = {
 	[event: string]: Callback;
 };
 
@@ -65,6 +63,22 @@ export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
 
 	unsubscribeAll<K extends keyof TEventsMap>(callback: TEventsMap[K]) {
 		this.#globalCallbacks.delete(callback);
+	}
+
+	once<K extends keyof TEventsMap>(
+		event: K extends string ? K : never,
+		callback: TEventsMap[K],
+	): () => void {
+		const wrapper = (...args: Parameters<TEventsMap[K]>) => {
+			this.removeEventListener(event, wrapper as TEventsMap[K]);
+			callback(...args);
+		};
+
+		this.addEventListener(event, wrapper as TEventsMap[K]);
+
+		return () => {
+			this.removeEventListener(event, wrapper as TEventsMap[K]);
+		};
 	}
 
 	clearAll() {

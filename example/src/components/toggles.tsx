@@ -63,3 +63,22 @@ export function ChatToggle(props: ButtonProps) {
 		</ControlbarButton>
 	);
 }
+
+export function CameraQualitySelector() {
+	const call = useCall();
+	const cameraTrackQuality = useCallSelector((call) => call.cameraTrackQuality);
+
+	return (
+		<select
+			value={cameraTrackQuality}
+			onChange={(e) =>
+				call.setRemoteCameraTrackQuality(e.target.value as 'f' | 'h' | 'q')
+			}
+			className="bg-cf-light/10 border-cf-light/60 border-1 px-2 py-1 rounded-lg text-sm"
+		>
+			<option value="q">Low</option>
+			<option value="h">Medium</option>
+			<option value="f">High</option>
+		</select>
+	);
+}

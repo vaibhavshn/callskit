@@ -1,9 +1,17 @@
 import { useCall, useCallSelector } from 'callskit/react';
 import { useMeetingStore } from '../../data/meeting-store';
 import clsx from 'clsx';
-import { DismissFilled, DismissRegular } from '@fluentui/react-icons';
+import {
+	CameraOffRegular,
+	CameraRegular,
+	DismissFilled,
+	MicOffRegular,
+	MicRegular,
+	VideoOffRegular,
+	VideoRegular,
+} from '@fluentui/react-icons';
 import { HTMLMotionProps, motion } from 'motion/react';
-import { ChatMessage } from 'callskit';
+import { CallParticipant, CallSelf, ChatMessage } from 'callskit';
 
 type SidebarProps = HTMLMotionProps<'div'>;
 
@@ -26,9 +34,10 @@ export function Sidebar({ className, ...props }: SidebarProps) {
 			{...props}
 		>
 			{store.sidebar === 'chat' && <Chat />}
+			{store.sidebar === 'participants' && <ParticipantsSidebar />}
 
 			<button
-				className="absolute right-2 top-2 z-10 size-6 hover:bg-zinc-100 transition-colors text-zinc-400 flex items-center justify-center rounded-md"
+				className="absolute right-2 top-2 z-10 size-6 hover:bg-zinc-100 transition-colors text-zinc-400 flex items-center justify-center rounded-md cursor-pointer"
 				onClick={() => {
 					store.setSidebar(undefined);
 				}}
@@ -51,11 +60,11 @@ function Chat() {
 
 	return (
 		<div className="flex flex-col size-full">
-			<div className="h-14 flex items-center px-3">
+			<div className="h-12 flex items-center px-3 shrink-0">
 				<h3 className="">Chat</h3>
 			</div>
 
-			<div className="grow px-2 flex flex-col overflow-y-auto py-2">
+			<div className="grow px-3 flex flex-col overflow-y-auto py-2">
 				{messages.map((message) => {
 					const isContinued = lastMessage
 						? lastMessage.user_id === message.user_id &&
@@ -113,6 +122,63 @@ function Chat() {
 						</div>
 					</div> */}
 				</div>
+			</div>
+		</div>
+	);
+}
+
+function Participant({
+	participant,
+	isSelf = false,
+}: {
+	participant: CallParticipant | CallSelf;
+	isSelf?: boolean;
+}) {
+	return (
+		<div className="flex items-center justify-between px-4 py-2">
+			<div className="text-xs gap-1 flex items-center">
+				<span className="text-sm">{participant.name}</span>
+				{isSelf && <span className="text-zinc-500">(you)</span>}
+			</div>
+			<div className="flex items-center gap-2">
+				<div
+					className={clsx(
+						'*:size-5',
+						!participant.micEnabled && 'text-red-700',
+					)}
+				>
+					{participant.micEnabled ? <MicRegular /> : <MicOffRegular />}
+				</div>
+				<div
+					className={clsx(
+						'*:size-5',
+						!participant.cameraEnabled && 'text-red-700',
+					)}
+				>
+					{participant.cameraEnabled ? <VideoRegular /> : <VideoOffRegular />}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+export function ParticipantsSidebar() {
+	const participants = useCallSelector(
+		(call) => call.participants.joined,
+	).toArray();
+	const self = useCallSelector((call) => call.self);
+
+	return (
+		<div className="flex flex-col size-full">
+			<div className="h-12 flex items-center px-4 shrink-0">
+				<h3 className="">Participants</h3>
+			</div>
+
+			<div className="grow flex flex-col overflow-y-auto pb-2">
+				<Participant participant={self} isSelf />
+				{participants.map((participant) => (
+					<Participant key={participant.id} participant={participant} />
+				))}
 			</div>
 		</div>
 	);

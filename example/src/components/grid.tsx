@@ -7,7 +7,9 @@ export function Grid() {
 	const $grid = useRef<HTMLDivElement>(null);
 	const dimensions = useGridDimensions($grid);
 
-	const participants = useCallSelector((call) => call.participants).toArray();
+	const participants = useCallSelector(
+		(call) => call.participants.stage,
+	).toArray();
 	const self = useCallSelector((call) => call.self);
 	const allParticipants = [...participants, self];
 

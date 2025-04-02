@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type Sidebar = 'chat' | undefined;
+type Sidebar = 'chat' | 'participants' | undefined;
 
 export type MeetingStore = {
 	sidebar: Sidebar;

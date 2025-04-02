@@ -17,7 +17,7 @@ export function SetupScreen() {
 	return (
 		<div className="size-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center">
 			<div className="grow w-full p-4 flex items-end justify-center md:items-center">
-				<div className="flex flex-col size-full gap-4">
+				<div className="flex flex-col w-full gap-4">
 					<div className="w-full max-w-[640px]">
 						<ParticipantTile participant={self} />
 					</div>
@@ -34,6 +34,7 @@ export function SetupScreen() {
 
 				<input
 					type="text"
+					autoFocus
 					value={name}
 					onChange={(e) => setName(e.target.value)}
 					className="w-full mb-4 max-w-64 bg-zinc-50 border border-zinc-200 rounded-lg px-3 h-10"

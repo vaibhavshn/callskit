@@ -37,7 +37,7 @@ export function CallProvider({
 		const onCallback = throttle(() => {
 			console.log('onCallback()');
 			callbacks.current.forEach((cb) => cb());
-		}, 200);
+		}, 100);
 
 		call.subscribeAll(onCallback);
 		call.self.subscribeAll(onCallback);

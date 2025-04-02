@@ -19,6 +19,7 @@ export type ParticipantMediaEvents = {
 					cameraEnabled: false;
 			  },
 	) => void;
+	volumeChange: (volume: number, lastVolume: number) => void;
 };
 
 export type CallSelfEvents = ParticipantMediaEvents;

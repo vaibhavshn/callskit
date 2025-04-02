@@ -13,7 +13,7 @@ export function ParticipantTile({
 	const call = useCall();
 	const isSelf = call.self.id === participant.id;
 	const $video = useRef<HTMLVideoElement>(null);
-	const $audio = useRef<HTMLAudioElement>(null);
+	// const $audio = useRef<HTMLAudioElement>(null);
 
 	useEffect(() => {
 		console.log(
@@ -24,25 +24,26 @@ export function ParticipantTile({
 		);
 		if (participant.cameraEnabled && participant.cameraTrack) {
 			$video.current!.srcObject = new MediaStream([participant.cameraTrack]);
+			$video.current!.play();
 		} else {
 			$video.current!.srcObject = null;
 		}
-	}, [participant.cameraTrack, participant.cameraEnabled, participant.name]);
+	}, [participant.cameraTrack, participant.cameraEnabled]);
 
-	useEffect(() => {
-		if (isSelf) return;
-		console.log(
-			'audio change found',
-			participant.name,
-			participant.micTrack,
-			participant.micEnabled,
-		);
-		if (participant.micEnabled && participant.micTrack) {
-			$audio.current!.srcObject = new MediaStream([participant.micTrack]);
-		} else {
-			$audio.current!.srcObject = null;
-		}
-	}, [isSelf, participant.micTrack, participant.micEnabled, participant.name]);
+	// useEffect(() => {
+	// 	if (isSelf) return;
+	// 	console.log(
+	// 		'audio change found',
+	// 		participant.name,
+	// 		participant.micTrack,
+	// 		participant.micEnabled,
+	// 	);
+	// 	if (participant.micEnabled && participant.micTrack) {
+	// 		$audio.current!.srcObject = new MediaStream([participant.micTrack]);
+	// 	} else {
+	// 		$audio.current!.srcObject = null;
+	// 	}
+	// }, [isSelf, participant.micTrack, participant.micEnabled, participant.name]);
 
 	return (
 		<div
@@ -78,7 +79,7 @@ export function ParticipantTile({
 				)}
 			/>
 
-			{!isSelf && <audio autoPlay ref={$audio} />}
+			{/* {!isSelf && <audio autoPlay ref={$audio} />} */}
 		</div>
 	);
 }
