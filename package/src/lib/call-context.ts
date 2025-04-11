@@ -14,6 +14,8 @@ export type CallContext = {
 	cameraRid$: BehaviorSubject<CameraRID>;
 	volumeContext: AudioContext;
 	maxOnStageParticipants: number;
+	cameraEncodings$: BehaviorSubject<RTCRtpEncodingParameters[]>;
+
 	onError?: (error: Error) => void;
 };
 

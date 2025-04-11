@@ -12,6 +12,9 @@
 	},
 	"prettier": {
 		"singleQuote": true,
-		"useTabs": true
+		"useTabs": true,
+		"plugins": [
+			"prettier-plugin-tailwindcss"
+		]
 	}
 }

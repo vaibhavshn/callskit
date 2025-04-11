@@ -7,7 +7,10 @@ export function Button({ className, children, ...props }: ButtonProps) {
 	return (
 		<button
 			className={clsx(
-				'inline-flex items-center gap-1.5 rounded-lg bg-orange-400/20 text-orange-700 text-sm px-3 h-9 transition-all ring-offset-2 ring-2 ring-transparent hover:ring-orange-400 outline-none hover:z-50 cursor-pointer',
+				'inline-flex items-center gap-1.5 rounded-lg bg-orange-400/20 text-sm px-3 h-9 transition-all routline-none hover:z-50 cursor-pointer',
+				'[&_svg]:size-5',
+				'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-950',
+				'dark:from-orange-400/60 dark:to-orange-500/40 dark:text-white',
 				className,
 			)}
 			{...props}
@@ -25,9 +28,9 @@ export function ControlbarButton({
 	return (
 		<button
 			className={clsx(
-				'inline-flex items-center rounded-lg bg-orange-400/20 text-orange-700 text-sm px-3 h-10 transition-all ring-offset-2 ring-2 ring-transparent hover:ring-orange-400 outline-none hover:z-50 *:size-6',
-				'data-active:bg-cf-dark data-active:text-white',
-				'cursor-pointer',
+				'inline-flex items-center rounded-lg text-sm px-3 h-10 transition-all outline-none hover:z-50 *:size-6 cursor-pointer',
+				'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-950',
+				'dark:from-orange-400/60 dark:to-orange-500/40 dark:text-white',
 				className,
 			)}
 			{...props}

@@ -1,4 +1,3 @@
-import { pad } from 'lodash-es';
 import { EventsHandler } from '../../utils/events-handler';
 import { Logger } from '../../utils/logger';
 import { getCurrentCallContext, type CallContext } from '../call-context';
@@ -42,7 +41,7 @@ export class ParticipantsController extends EventsHandler<ParticipantControllerE
 	}
 }
 
-const stageLogger = new Logger({ prefix: '[STAGE]', level: 'debug' });
+const stageLogger = new Logger({ prefix: '[STAGE]' });
 
 export class Stage extends EventsHandler {
 	participants: CallParticipant[] = [];
@@ -67,14 +66,14 @@ export class Stage extends EventsHandler {
 			return;
 		}
 		const idx = this.participants.findIndex((p) => p.id === participant.id);
-		console.log('adding participant', idx, participant);
+		stageLogger.debug('adding participant', idx, participant);
 		if (idx >= 0) {
-			console.log('replacing participant', participant, idx);
+			stageLogger.debug('replacing participant', participant, idx);
 			this.participants[idx] = participant;
 			this.participants = [...this.participants];
 			this.emit('updated', participant);
 		} else {
-			console.log('confirm adding to stage', participant);
+			stageLogger.debug('confirm adding to stage', participant);
 			this.participants = [...this.participants, participant];
 			this.emit('added', participant);
 		}
@@ -119,7 +118,7 @@ export class Stage extends EventsHandler {
 				0,
 				this.maxOnStageParticipants - stage.length,
 			);
-			console.log('adding to stage from joined', toAddOnStage);
+			stageLogger.debug('adding to stage from joined', toAddOnStage);
 			stage.push(...toAddOnStage);
 			this.participants = stage;
 			this.emit('updated');

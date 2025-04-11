@@ -2,8 +2,6 @@ import { useCall, useCallSelector } from 'callskit/react';
 import { useMeetingStore } from '../../data/meeting-store';
 import clsx from 'clsx';
 import {
-	CameraOffRegular,
-	CameraRegular,
 	DismissFilled,
 	MicOffRegular,
 	MicRegular,
@@ -27,8 +25,9 @@ export function Sidebar({ className, ...props }: SidebarProps) {
 			initial={{ x: 120 }}
 			animate={{ x: 0 }}
 			exit={{ x: 120 }}
+			transition={{ duration: 0.2 }}
 			className={clsx(
-				'relative rounded-lg bg-white border border-zinc-200 h-full w-full max-w-xs',
+				'relative h-full w-full max-w-xs rounded-lg border border-zinc-200 bg-white dark:bg-gray-950',
 				className,
 			)}
 			{...props}
@@ -37,7 +36,7 @@ export function Sidebar({ className, ...props }: SidebarProps) {
 			{store.sidebar === 'participants' && <ParticipantsSidebar />}
 
 			<button
-				className="absolute right-2 top-2 z-10 size-6 hover:bg-zinc-100 transition-colors text-zinc-400 flex items-center justify-center rounded-md cursor-pointer"
+				className="absolute top-2 right-2 z-10 flex size-6 cursor-pointer items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100"
 				onClick={() => {
 					store.setSidebar(undefined);
 				}}
@@ -59,12 +58,12 @@ function Chat() {
 	let lastMessage: ChatMessage | undefined = undefined;
 
 	return (
-		<div className="flex flex-col size-full">
-			<div className="h-12 flex items-center px-3 shrink-0">
+		<div className="flex size-full flex-col">
+			<div className="flex h-12 shrink-0 items-center px-3">
 				<h3 className="">Chat</h3>
 			</div>
 
-			<div className="grow px-3 flex flex-col overflow-y-auto py-2">
+			<div className="flex grow flex-col overflow-y-auto px-3 py-2">
 				{messages.map((message) => {
 					const isContinued = lastMessage
 						? lastMessage.user_id === message.user_id &&
@@ -80,11 +79,11 @@ function Chat() {
 								className={clsx('mb-2', isContinued && '-mt-1')}
 							>
 								{!isContinued && (
-									<div className="text-xs font-semibold mb-1">
+									<div className="mb-1 text-xs font-semibold">
 										{message.display_name}
 									</div>
 								)}
-								<p className="bg-gradient-to-br from-zinc-100 w-fit to-zinc-50 p-2 rounded-md text-sm break-all">
+								<p className="w-fit rounded-md bg-gradient-to-br from-zinc-100 to-zinc-50 p-2 text-sm break-all dark:from-gray-800 dark:to-gray-900">
 									{message.message}
 								</p>
 							</div>
@@ -94,13 +93,13 @@ function Chat() {
 				})}
 			</div>
 
-			<div className="p-2 border-t border-zinc-200">
-				<div className="size-full flex flex-col bg-zinc-100 rounded-lg">
+			<div className="border-t border-zinc-200 p-2">
+				<div className="flex size-full flex-col rounded-lg bg-transparent">
 					<textarea
 						name=""
 						id=""
-						placeholder="Message"
-						className="p-2 resize-none min-h-20 outline-none text-sm"
+						placeholder="Message everyone..."
+						className="min-h-20 resize-none p-2 text-sm outline-none"
 						onKeyDown={(e) => {
 							if (
 								!e.shiftKey &&
@@ -136,7 +135,7 @@ function Participant({
 }) {
 	return (
 		<div className="flex items-center justify-between px-4 py-2">
-			<div className="text-xs gap-1 flex items-center">
+			<div className="flex items-center gap-1 text-xs">
 				<span className="text-sm">{participant.name}</span>
 				{isSelf && <span className="text-zinc-500">(you)</span>}
 			</div>
@@ -169,12 +168,12 @@ export function ParticipantsSidebar() {
 	const self = useCallSelector((call) => call.self);
 
 	return (
-		<div className="flex flex-col size-full">
-			<div className="h-12 flex items-center px-4 shrink-0">
+		<div className="flex size-full flex-col">
+			<div className="flex h-12 shrink-0 items-center px-4">
 				<h3 className="">Participants</h3>
 			</div>
 
-			<div className="grow flex flex-col overflow-y-auto pb-2">
+			<div className="flex grow flex-col overflow-y-auto pb-2">
 				<Participant participant={self} isSelf />
 				{participants.map((participant) => (
 					<Participant key={participant.id} participant={participant} />

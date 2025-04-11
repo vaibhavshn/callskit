@@ -37,7 +37,7 @@ export function SetupScreen() {
 					autoFocus
 					value={name}
 					onChange={(e) => setName(e.target.value)}
-					className="w-full mb-4 max-w-64 bg-zinc-50 border border-zinc-200 rounded-lg px-3 h-10"
+					className="w-full mb-4 max-w-64 bg-white/5 border border-zinc-200 rounded-lg px-3 h-10"
 					onKeyDown={(e) => {
 						if (!e.shiftKey && e.key === 'Enter') {
 							e.preventDefault();

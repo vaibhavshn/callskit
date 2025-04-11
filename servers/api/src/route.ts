@@ -68,7 +68,5 @@ export const routePartyTracksRequest = ({
 	callsUrl.pathname = previousUrl.pathname.replace(prefix, callsUrl.pathname);
 	callsUrl.search = previousUrl.search;
 
-	console.log(callsInit);
-	// console.log(callsUrl, callsInit);
 	return fetch(callsUrl, callsInit);
 };

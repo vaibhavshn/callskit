@@ -19,7 +19,7 @@ export function MicToggle() {
 		} else {
 			call.self.startMic();
 		}
-	}, []);
+	}, [call.self]);
 
 	return (
 		<ControlbarButton onClick={toggleMic}>
@@ -37,7 +37,7 @@ export function CameraToggle() {
 		} else {
 			call.self.startCamera();
 		}
-	}, []);
+	}, [call.self]);
 
 	return (
 		<ControlbarButton onClick={toggleCamera}>
@@ -72,13 +72,12 @@ export function CameraQualitySelector() {
 		<select
 			value={cameraTrackQuality}
 			onChange={(e) =>
-				call.setRemoteCameraTrackQuality(e.target.value as 'f' | 'h' | 'q')
+				call.setRemoteCameraTrackQuality(e.target.value as 'a' | 'b')
 			}
 			className="bg-cf-light/10 border-cf-light/60 border-1 px-2 py-1 rounded-lg text-sm"
 		>
-			<option value="q">Low</option>
-			<option value="h">Medium</option>
-			<option value="f">High</option>
+			<option value="a">High Quality</option>
+			<option value="b">Data Saver</option>
 		</select>
 	);
 }

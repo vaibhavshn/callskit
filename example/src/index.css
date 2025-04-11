@@ -6,13 +6,22 @@
 	#root {
 		height: 100%;
 	}
-
-	:root {
-		border-color: theme(colors.zinc.300);
-	}
 }
 
 @theme {
-	--color-cf-dark: #F6821E;
-	--color-cf-light: #FCAD41;
+	--color-cf-dark: #f6821e;
+	--color-cf-light: #fcad41;
+}
+
+* {
+	@apply border-zinc-300 dark:border-zinc-700;
+}
+
+html,
+body {
+	@apply bg-white dark:bg-gray-950 dark:text-white;
+
+	@media (prefers-color-scheme: dark) {
+		color-scheme: dark;
+	}
 }

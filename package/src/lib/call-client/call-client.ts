@@ -1,4 +1,4 @@
-import { PartyTracks } from 'partytracks/client';
+import { PartyTracks, setLogLevel } from 'partytracks/client';
 import { BehaviorSubject } from 'rxjs';
 import type { CallEvent } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
@@ -10,6 +10,7 @@ import { ParticipantsController } from '../participants-controller/participants-
 import { CallSelf, type CameraRID } from '../call-self/call-self';
 import { CallSocket } from '../call-socket';
 import type { CallClientEvents } from './call-client-events';
+import { cameraEncodings } from '../call-self/call-self-data';
 
 export type CallClientOptions = {
 	room: string;
@@ -31,6 +32,8 @@ export type CallClientOptions = {
 	onError?: (error: Error) => void;
 };
 
+setLogLevel('debug');
+
 export class CallClient extends EventsHandler<CallClientEvents> {
 	room: string;
 	state: undefined | 'connected' | 'joined' | 'left' = undefined;
@@ -51,7 +54,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 
 		this.#logger = new Logger({
 			level: options.logLevel ?? 'warn',
-			prefix: 'CallClient',
+			// prefix: 'callskit',
 		});
 
 		const socket = new CallSocket({
@@ -59,7 +62,9 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			host: import.meta.env.SOCKET_URL,
 			logger: this.#logger,
 		});
+
 		socket.addEventListener('message', this.#onMessage.bind(this));
+
 		if (options.onError) {
 			const onError = options.onError;
 			socket.addEventListener('error', (e) => {
@@ -77,7 +82,10 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			call: this,
 			logger: this.#logger,
 			cameraRid$: new BehaviorSubject<CameraRID>(
-				options.config?.preferredCameraQuality ?? 'q',
+				options.config?.preferredCameraQuality ?? 'a',
+			),
+			cameraEncodings$: new BehaviorSubject<RTCRtpEncodingParameters[]>(
+				cameraEncodings,
 			),
 			volumeContext: new AudioContext(),
 			maxOnStageParticipants: options.config?.maxOnStageParticipants ?? 9,
@@ -100,10 +108,26 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 	}
 
 	leave() {
-		this.#ctx.socket.sendAction({ action: 'leave' });
 		this.#ctx.socket.close();
 		this.state = 'left';
 		this.emit('left');
+	}
+
+	get cameraTrackQuality() {
+		return this.#ctx.cameraRid$.value;
+	}
+
+	setRemoteCameraTrackQuality(quality: CameraRID) {
+		const qualities: CameraRID[] = ['a', 'b'];
+		if (qualities.includes(quality)) {
+			const oldQuality = this.#ctx.cameraRid$.value;
+			this.#ctx.cameraRid$.next(quality);
+			this.emit('cameraQualityChanged', quality, oldQuality);
+		}
+	}
+
+	#runWithContext<T>(fn: () => T): T {
+		return runWithContext(this.#ctx, fn);
 	}
 
 	#onMessage(event: MessageEvent<string>) {
@@ -166,21 +190,10 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 				this.chat.addMessage(ev.message);
 				break;
 			}
-		}
-	}
 
-	#runWithContext<T>(fn: () => T): T {
-		return runWithContext(this.#ctx, fn);
-	}
-
-	get cameraTrackQuality() {
-		return this.#ctx.cameraRid$.value;
-	}
-
-	setRemoteCameraTrackQuality(quality: CameraRID) {
-		const qualities = ['f', 'h', 'q'] satisfies CameraRID[];
-		if (qualities.includes(quality)) {
-			this.#ctx.cameraRid$.next(quality);
+			default:
+				this.#logger.info('Received unknown event:', ev);
+				break;
 		}
 	}
 }

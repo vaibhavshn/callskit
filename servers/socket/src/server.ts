@@ -32,6 +32,27 @@ export default class Server implements Party.Server {
 		conn.send(createEvent({ event: 'connected' }));
 	}
 
+	onClose(connection: Party.Connection): void | Promise<void> {
+		this.connectionIds.delete(connection.id);
+		const user = this.getUser(connection.id);
+		if (user) {
+			this.removeUser(connection.id);
+			this.room.broadcast(
+				createEvent({ event: 'participant/left', participantId: user.id }),
+			);
+		}
+
+		if (this.users.length === 0) {
+			this.room.storage.put<ChatMessage[]>('chat', this.chat);
+			setTimeout(() => {
+				if (this.users.length === 0) {
+					this.room.storage.delete('users');
+					this.room.storage.delete('chat');
+				}
+			}, 1000 * 60);
+		}
+	}
+
 	onMessage(message: string, sender: Party.Connection) {
 		console.log(`connection ${sender.id} sent message: ${message}`);
 		const payload = parseAction(message);
@@ -128,21 +149,6 @@ export default class Server implements Party.Server {
 				}
 				break;
 			}
-		}
-	}
-
-	onClose(connection: Party.Connection): void | Promise<void> {
-		this.connectionIds.delete(connection.id);
-		const user = this.users.find((user) => user.connectionId === connection.id);
-		if (user) {
-			this.removeUser(connection.id);
-			this.room.broadcast(
-				createEvent({ event: 'participant/left', participantId: user.id }),
-			);
-		}
-
-		if (this.users.length === 0) {
-			this.room.storage.put<ChatMessage[]>('chat', this.chat);
 		}
 	}
 

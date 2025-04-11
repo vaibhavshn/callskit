@@ -1,6 +1,28 @@
 import invariant from 'tiny-invariant';
 import { Observable } from 'rxjs';
 
+export const blackCanvasStreamTrack$ = new Observable<MediaStreamTrack>(
+	(subscriber) => {
+		const canvas = document.createElement('canvas');
+		canvas.height = 720;
+		canvas.width = 1280;
+		const ctx = canvas.getContext('2d');
+		invariant(ctx);
+		ctx.fillStyle = 'black';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		// we need to draw to the canvas in order for video
+		// frames to be sent on the video track
+		const interval = setInterval(() => {
+			ctx.fillStyle = 'black';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+		}, 1000);
+		subscriber.next(canvas.captureStream().getVideoTracks()[0]!);
+		return () => {
+			clearInterval(interval);
+		};
+	},
+);
+
 export function blackCanvasStreamTrack(videoTrack?: MediaStreamTrack) {
 	const canvas = document.createElement('canvas');
 	canvas.height = videoTrack?.getSettings().height ?? 720;
@@ -20,6 +42,7 @@ export function blackCanvasStreamTrack(videoTrack?: MediaStreamTrack) {
 
 export function getInaudibleTrack() {
 	const audioContext = new AudioContext();
+	audioContext.resume();
 
 	const oscillator = audioContext.createOscillator();
 	oscillator.type = 'triangle';

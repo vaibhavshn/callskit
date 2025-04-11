@@ -3,11 +3,9 @@ import {
 	combineLatest,
 	distinctUntilChanged,
 	filter,
-	map,
 	of,
 	switchMap,
 	tap,
-	withLatestFrom,
 } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
@@ -69,62 +67,67 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 
 		let volumeInterval: NodeJS.Timeout;
 
-		combineLatest([this.#micEnabled$, this.#micTrack$]).subscribe(
-			([micEnabled, micTrack]) => {
-				console.log('combineLatest', { micEnabled, micTrack });
-				if (micEnabled && micTrack) {
-					console.log('analyzing');
-					const ctx = this.#ctx.volumeContext;
-					ctx.resume();
-					const stream = new MediaStream([micTrack]);
-					const source = ctx.createMediaStreamSource(stream);
-					const analyser = ctx.createAnalyser();
-					analyser.fftSize = 2048;
-					source.connect(analyser);
-					const bufferLength = analyser.frequencyBinCount;
-					const dataArray = new Uint8Array(bufferLength);
+		combineLatest([
+			this.#micEnabled$.pipe(distinctUntilChanged()),
+			this.#micTrack$.pipe(distinctUntilChanged()),
+		]).subscribe(([micEnabled, micTrack]) => {
+			this.#ctx.logger.debug('combineLatest', { micEnabled, micTrack });
+			if (micEnabled && micTrack) {
+				this.#ctx.logger.debug('📏 starting participant volume estimation');
+				const ctx = this.#ctx.volumeContext;
+				ctx.resume();
+				const stream = new MediaStream([micTrack]);
+				const source = ctx.createMediaStreamSource(stream);
+				const analyser = ctx.createAnalyser();
+				analyser.fftSize = 2048;
+				source.connect(analyser);
+				const bufferLength = analyser.frequencyBinCount;
+				const dataArray = new Uint8Array(bufferLength);
 
-					volumeInterval = setInterval(() => {
-						analyser.getByteTimeDomainData(dataArray);
+				volumeInterval = setInterval(() => {
+					analyser.getByteTimeDomainData(dataArray);
 
-						let sum = 0;
-						for (const data of dataArray) {
-							const normalized = (data - 128) / 128;
-							sum += normalized * normalized;
-						}
+					let sum = 0;
+					for (const data of dataArray) {
+						const normalized = (data - 128) / 128;
+						sum += normalized * normalized;
+					}
 
-						const rms = Math.sqrt(sum / dataArray.length);
+					const rms = Math.sqrt(sum / dataArray.length);
 
-						const lastVolume = this.volume;
-						this.volume = rmsToDbfs(rms);
-
-						if (this.volume !== lastVolume) {
-							this.emit('volumeChange', this.volume, lastVolume);
-							this.#ctx.call.participants.joined.emit(
-								'volumeChange',
-								this,
-								lastVolume,
-							);
-						}
-					}, 500);
-				} else {
-					clearInterval(volumeInterval);
 					const lastVolume = this.volume;
-					this.volume = -Infinity;
-					this.#ctx.call.participants.joined.emit(
-						'volumeChange',
-						this,
-						lastVolume,
-					);
-				}
-			},
-		);
+					this.volume = rmsToDbfs(rms);
 
-		combineLatest([this.#micEnabled$, this.#micTrackId$])
+					if (this.volume !== lastVolume) {
+						this.emit('volumeChange', this.volume, lastVolume);
+						this.#ctx.call.participants.joined.emit(
+							'volumeChange',
+							this,
+							lastVolume,
+						);
+					}
+				}, 500);
+			} else {
+				this.#ctx.logger.debug('📏 ending participant volume estimation');
+				clearInterval(volumeInterval);
+				const lastVolume = this.volume;
+				this.volume = -Infinity;
+				this.#ctx.call.participants.joined.emit(
+					'volumeChange',
+					this,
+					lastVolume,
+				);
+			}
+		});
+
+		combineLatest([
+			this.#micEnabled$.pipe(distinctUntilChanged()),
+			this.#micTrackId$.pipe(distinctUntilChanged()),
+		])
 			.pipe(
-				tap(([enabled]) => {
-					if (!enabled) {
-						console.log('reset state');
+				tap(([enabled, trackId]) => {
+					if (!enabled && !trackId) {
+						this.#ctx.logger.debug('🔈 reset participant mic state');
 						this.#micTrack$.next(undefined);
 						this.emit('micUpdate', { micEnabled: false });
 						this.#ctx.call.participants.joined.emit('micUpdate', this);
@@ -133,9 +136,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				}),
 				filter(([enabled, trackId]) => enabled && typeof trackId === 'string'),
 				switchMap(([enabled, trackId]) => {
-					console.log('tap latest', { enabled, trackId });
-					console.log('pulling mic trackij', trackId);
-					const [sessionId, trackName] = trackId!.split(':');
+					this.#ctx.logger.debug('🔈 pulling mic track:', trackId);
+					const [sessionId, trackName] = trackId!.split('/');
 					return this.#ctx.partyTracks.pull(
 						of({
 							sessionId,
@@ -144,13 +146,11 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 						} satisfies TrackMetadata),
 					);
 				}),
-				tap((track) => {
-					console.log('pulled track', track);
-				}),
 			)
-			.subscribe((track) => {
-				this.#micTrack$.next(track);
-				this.emit('micUpdate', { micEnabled: true, micTrack: track });
+			.subscribe((micTrack) => {
+				this.#ctx.logger.debug('🔈 pulled mic track:', micTrack);
+				this.#micTrack$.next(micTrack);
+				this.emit('micUpdate', { micEnabled: true, micTrack });
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
 				this.#ctx.call.participants.stage.emit('micUpdate', this);
 			});
@@ -161,9 +161,9 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		])
 			.pipe(
 				tap(([enabled, trackId]) => {
-					console.log('before filter tap', { enabled, trackId });
+					this.#ctx.logger.debug('before filter tap', { enabled, trackId });
 					if (!enabled && !trackId) {
-						console.log('reset state');
+						this.#ctx.logger.debug('reset state');
 						this.#cameraTrack$.next(undefined);
 						this.emit('cameraUpdate', { cameraEnabled: false });
 						this.#ctx.call.participants.joined.emit('cameraUpdate', this);
@@ -172,9 +172,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				}),
 				filter(([enabled, trackId]) => enabled && typeof trackId === 'string'),
 				switchMap(([enabled, trackId]) => {
-					console.log('tap latest camera', { enabled, trackId });
-					console.log('pulling camera track', trackId);
-					const [sessionId, trackName] = trackId!.split(':');
+					this.#ctx.logger.debug('🎥 pulling camera track:', trackId);
+					const [sessionId, trackName] = trackId!.split('/');
 					return this.#ctx.partyTracks.pull(
 						of({
 							sessionId,
@@ -186,25 +185,28 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				}),
 				tap({
 					next: (track) => {
-						console.log('pulled camera track', track);
+						this.#ctx.logger.debug('pulled camera track', track);
 					},
 					error: (error) => {
-						console.log('error while pulling camera track', error);
+						this.#ctx.logger.debug('error while pulling camera track', error);
 					},
 				}),
 			)
-			.subscribe((track) => {
-				console.log('emit camera track', track);
-				this.#cameraTrack$.next(track);
-				this.emit('cameraUpdate', { cameraEnabled: true, cameraTrack: track });
+			.subscribe((cameraTrack) => {
+				this.#ctx.logger.debug('🎥 pulled camera track:', cameraTrack);
+				this.#cameraTrack$.next(cameraTrack);
+				this.emit('cameraUpdate', {
+					cameraEnabled: true,
+					cameraTrack,
+				});
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
 				this.#ctx.call.participants.stage.emit('cameraUpdate', this);
 			});
 	}
 
 	updateMicState(updates: { micEnabled: boolean; micTrackId?: string }) {
+		this.#ctx.logger.debug('🎤 participant mic state updated', updates);
 		if (updates.micEnabled && updates.micTrackId) {
-			console.log('updateMicState true');
 			this.#micTrackId$.next(updates.micTrackId);
 			this.#micEnabled$.next(true);
 		} else {
@@ -217,8 +219,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		cameraEnabled: boolean;
 		cameraTrackId?: string;
 	}) {
+		this.#ctx.logger.debug('🎥 participant camera state updated', updates);
 		if (updates.cameraEnabled && updates.cameraTrackId) {
-			console.log('update camera state', updates);
 			this.#cameraTrackId$.next(updates.cameraTrackId);
 			this.#cameraEnabled$.next(true);
 		} else {

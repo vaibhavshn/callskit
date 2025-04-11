@@ -35,7 +35,6 @@ export function CallProvider({
 		if (!call) return;
 
 		const onCallback = throttle(() => {
-			console.log('onCallback()');
 			callbacks.current.forEach((cb) => cb());
 		}, 100);
 
@@ -84,7 +83,6 @@ export function useCallSelector<CallSlice>(
 		return ctx.subscribe(() => {
 			const next = selector(call);
 			if (!shallow(prevSlice.current, next)) {
-				console.log('found change', prevSlice.current, next);
 				prevSlice.current = next;
 				setSlice(next);
 			}
