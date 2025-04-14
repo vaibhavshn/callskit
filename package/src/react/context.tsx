@@ -73,11 +73,16 @@ export function useCallSelector<CallSlice>(
 
 	const [slice, setSlice] = React.useState(() => selector(call));
 	const prevSlice = React.useRef<CallSlice>(slice);
-	const [, forceUpdate] = React.useReducer((state) => state + 1, 0);
+	const [state, forceUpdate] = React.useReducer((state) => state + 1, 0);
 
 	React.useEffect(() => {
 		if (slice instanceof EventsHandler) {
-			return slice.subscribeAll(forceUpdate);
+			return slice.subscribeAll((event, ...args) => {
+				if (event === 'volumeChange') {
+					return;
+				}
+				forceUpdate();
+			});
 		}
 
 		return ctx.subscribe(() => {

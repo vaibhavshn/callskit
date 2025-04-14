@@ -3,6 +3,7 @@ import { type CallSelf, type CallParticipant } from 'callskit';
 import { useCall } from 'callskit/react';
 import clsx from 'clsx';
 import React, { useEffect, useRef } from 'react';
+import { AudioVisualizer } from './audio-visualizer';
 
 export function ParticipantTile({
 	className,
@@ -34,9 +35,12 @@ export function ParticipantTile({
 			{...props}
 		>
 			{/* Name Tag */}
-			<div className="absolute bottom-3 left-3 z-10 flex h-8 items-center gap-1 rounded-md border bg-white/60 px-2 text-sm backdrop-blur-md dark:bg-white/20">
-				<span className="line-clamp-1 max-w-72">{participant.name}</span>
-				{isSelf && <span className="text-xs text-zinc-500">(you)</span>}
+			<div className="absolute bottom-3 left-3 z-10 flex h-8 items-center gap-1 rounded-md border bg-white/60 px-1.5 text-sm backdrop-blur-md dark:bg-white/20">
+				<AudioVisualizer participant={participant} />
+				<span className="flex shrink-0 grow items-center gap-1">
+					<span className="line-clamp-1">{participant.name}</span>
+					{isSelf && <span className="text-xs text-zinc-500">(you)</span>}
+				</span>
 			</div>
 
 			<video

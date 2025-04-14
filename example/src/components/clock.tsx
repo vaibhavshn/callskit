@@ -1,4 +1,4 @@
-import { useCallSelector } from 'callskit/react';
+import { useCall, useCallSelector } from 'callskit/react';
 import clsx from 'clsx';
 import { ComponentProps, useEffect, useMemo, useState } from 'react';
 
@@ -9,11 +9,11 @@ function getElapsedTime(started_at: Date) {
 const addZero = (n: number) => Math.trunc(n).toString().padStart(2, '0');
 
 export function Clock({ className, ...props }: ComponentProps<'div'>) {
-	const started_at = useCallSelector((call) => call.started_at);
+	const started_at = useCall().started_at;
 	const [elapsed, setElapsed] = useState(() => getElapsedTime(started_at));
 
 	useEffect(() => {
-		let timeout: number, request: number;
+		let timeout: NodeJS.Timeout, request: number;
 
 		const animate = () => {
 			setElapsed(getElapsedTime(started_at));

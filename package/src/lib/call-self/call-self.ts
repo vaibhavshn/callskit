@@ -1,11 +1,5 @@
 import { resilientTrack$ } from 'partytracks/client';
-import {
-	BehaviorSubject,
-	distinctUntilChanged,
-	Observable,
-	switchMap,
-	tap,
-} from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, switchMap, tap } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import {
@@ -15,6 +9,7 @@ import {
 import { type CallClientOptions } from '../call-client/call-client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
 import type { CallSelfEvents } from './call-self-events';
+import { normalize_rms } from '../../utils/volume';
 
 export type CallSelfOptions = {
 	name: string;
@@ -31,6 +26,8 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	id: string = crypto.randomUUID();
 	name: string;
 
+	volume: number = -Infinity;
+
 	#ctx: CallContext;
 
 	#micEnabled$: BehaviorSubject<boolean>;
@@ -42,6 +39,8 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	#cameraEnabled: boolean = false;
 	#cameraTrack: MediaStreamTrack | undefined;
 	#cameraTrackId: string | undefined;
+
+	#volumeInterval: NodeJS.Timeout | undefined;
 
 	constructor(options: CallSelfOptions) {
 		super();
@@ -76,6 +75,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 			if (micEnabled && micTrack) {
 				const micTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#micTrackId = micTrackId;
 				this.#micEnabled = true;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
@@ -88,6 +88,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					micEnabled: true,
 					micTrack,
 				});
+				this.#startVolumeMeasurement();
 			} else if (!micEnabled) {
 				this.#micEnabled = false;
 				this.#ctx.socket.sendAction({
@@ -95,6 +96,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					updates: { micEnabled: false },
 				});
 				this.emit('micUpdate', { micEnabled: false });
+				this.#stopVolumeMeasurement();
 			}
 		});
 
@@ -143,6 +145,50 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		});
 	}
 
+	#startVolumeMeasurement() {
+		this.#stopVolumeMeasurement();
+
+		if (this.#micEnabled && this.#micTrack) {
+			this.#ctx.logger.debug('📏 starting participant volume estimation');
+			const ctx = this.#ctx.volumeContext;
+			ctx.resume();
+			const stream = new MediaStream([this.#micTrack]);
+			const source = ctx.createMediaStreamSource(stream);
+			const analyser = ctx.createAnalyser();
+			analyser.fftSize = 2048;
+			source.connect(analyser);
+			const bufferLength = analyser.frequencyBinCount;
+			const dataArray = new Uint8Array(bufferLength);
+
+			this.#volumeInterval = setInterval(() => {
+				analyser.getByteTimeDomainData(dataArray);
+
+				let sum = 0;
+				for (const data of dataArray) {
+					const normalized = (data - 128) / 128;
+					sum += normalized * normalized;
+				}
+
+				const rms = Math.sqrt(sum / dataArray.length);
+
+				const lastVolume = this.volume;
+				this.volume = normalize_rms(rms);
+
+				if (this.volume !== lastVolume) {
+					this.emit('volumeChange', this.volume, lastVolume);
+				}
+			}, 400);
+		}
+	}
+
+	#stopVolumeMeasurement() {
+		this.#ctx.logger.debug('📏 ending participant volume estimation');
+		clearInterval(this.#volumeInterval);
+		const lastVolume = this.volume;
+		this.volume = -Infinity;
+		this.emit('volumeChange', this.volume, lastVolume);
+	}
+
 	startMic() {
 		this.#micEnabled$.next(true);
 	}
@@ -164,7 +210,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	get micTrack(): MediaStreamTrack | undefined {
-		return this.#micEnabled && this.#micTrack ? this.#micTrack : undefined;
+		return this.#micEnabled ? this.#micTrack : undefined;
 	}
 
 	get cameraEnabled(): boolean {
@@ -172,9 +218,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	get cameraTrack(): MediaStreamTrack | undefined {
-		return this.#cameraEnabled && this.#cameraTrack
-			? this.#cameraTrack
-			: undefined;
+		return this.#cameraEnabled ? this.#cameraTrack : undefined;
 	}
 
 	toJSON(): SerializedUser {

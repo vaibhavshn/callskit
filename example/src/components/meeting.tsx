@@ -44,6 +44,7 @@ export function Meeting() {
 		Object.assign(window, { audio });
 
 		return call.participants.joined.subscribe('micUpdate', (participant) => {
+			console.log('playAudio', participant.micEnabled, participant.micTrack);
 			if (participant.micEnabled && participant.micTrack) {
 				stream.addTrack(participant.micTrack);
 				trackMap.set(participant.id, participant.micTrack);
