@@ -34,13 +34,11 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	#ctx: CallContext;
 
 	#micEnabled$: BehaviorSubject<boolean>;
-	#micTrack$: Observable<MediaStreamTrack>;
 	#micEnabled: boolean = false;
 	#micTrack: MediaStreamTrack | undefined;
 	#micTrackId: string | undefined;
 
 	#cameraEnabled$: BehaviorSubject<boolean>;
-	#cameraTrack$: Observable<MediaStreamTrack>;
 	#cameraEnabled: boolean = false;
 	#cameraTrack: MediaStreamTrack | undefined;
 	#cameraTrackId: string | undefined;
@@ -58,7 +56,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			options.defaults?.video ?? false,
 		);
 
-		this.#micTrack$ = this.#micEnabled$.pipe(
+		const micTrack$ = this.#micEnabled$.pipe(
 			distinctUntilChanged(),
 			switchMap((enabled) =>
 				enabled
@@ -70,7 +68,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			}),
 		);
 
-		const micMetadata$ = this.#ctx.partyTracks.push(this.#micTrack$);
+		const micMetadata$ = this.#ctx.partyTracks.push(micTrack$);
 
 		micMetadata$.subscribe((metadata) => {
 			const micEnabled = this.#micEnabled$.value;
@@ -100,7 +98,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			}
 		});
 
-		this.#cameraTrack$ = this.#cameraEnabled$.pipe(
+		const cameraTrack$ = this.#cameraEnabled$.pipe(
 			distinctUntilChanged(),
 			switchMap((enabled) =>
 				enabled
@@ -112,7 +110,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			}),
 		);
 
-		const cameraMetadata$ = this.#ctx.partyTracks.push(this.#cameraTrack$);
+		const cameraMetadata$ = this.#ctx.partyTracks.push(cameraTrack$);
 
 		cameraMetadata$.subscribe((metadata) => {
 			const cameraEnabled = this.#cameraEnabled$.value;
