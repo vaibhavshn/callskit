@@ -11,33 +11,41 @@ export function SetupScreen() {
 	const self = useCallSelector((call) => call.self);
 
 	useEffect(() => {
+		// navigator.mediaDevices
+		// 	.getUserMedia({ audio: true, video: true })
+		// 	.then((stream) => {
+		// 		stream.getTracks().map((track) => track.stop());
+		// 	});
+	}, []);
+
+	useEffect(() => {
 		call.self.name = name;
 	}, [name, call]);
 
 	return (
-		<div className="size-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center">
-			<div className="grow w-full p-4 flex items-end justify-center md:items-center">
-				<div className="flex flex-col w-full gap-4">
+		<div className="mx-auto flex size-full max-w-6xl flex-col items-center justify-center md:flex-row">
+			<div className="flex w-full grow items-end justify-center p-4 md:items-center">
+				<div className="flex w-full flex-col gap-4">
 					<div className="w-full max-w-[640px]">
 						<ParticipantTile participant={self} />
 					</div>
 
-					<div className="flex items-center justify-center h-10 gap-2">
+					<div className="flex h-10 items-center justify-center gap-2">
 						<MicToggle />
 						<CameraToggle />
 					</div>
 				</div>
 			</div>
 
-			<div className="grow max-w-[560px] flex flex-col items-center justify-start p-4 w-full">
-				<h3 className="text-lg mb-3">Join as</h3>
+			<div className="flex w-full max-w-[560px] grow flex-col items-center justify-start p-4">
+				<h3 className="mb-3 text-lg">Join as</h3>
 
 				<input
 					type="text"
 					autoFocus
 					value={name}
 					onChange={(e) => setName(e.target.value)}
-					className="w-full mb-4 max-w-64 bg-white/5 border border-zinc-200 rounded-lg px-3 h-10"
+					className="mb-4 h-10 w-full max-w-64 rounded-lg border border-zinc-200 bg-white/5 px-3"
 					onKeyDown={(e) => {
 						if (!e.shiftKey && e.key === 'Enter') {
 							e.preventDefault();
@@ -47,7 +55,7 @@ export function SetupScreen() {
 				/>
 
 				<Button className="text-base" onClick={() => call.join()}>
-					<ArrowEnterLeftFilled className="" />
+					<ArrowEnterLeftFilled />
 					Join
 				</Button>
 			</div>

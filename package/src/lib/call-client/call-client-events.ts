@@ -5,6 +5,8 @@ type CallEvents = {
 	joined: () => void;
 	left: () => void;
 
+	mediaConnected: () => void;
+
 	cameraQualityChanged: (newQuality: CameraRID, oldQuality: CameraRID) => void;
 };
 

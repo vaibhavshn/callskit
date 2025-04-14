@@ -5,12 +5,12 @@ export type BaseEventsMap = {
 };
 
 export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
-	#callbacksMap: Map<string, Set<Callback>>;
-	#globalCallbacks: Set<Callback>;
+	#callbacksMap: Map<string, Callback[]>;
+	#globalCallbacks: Callback[];
 
 	constructor() {
 		this.#callbacksMap = new Map();
-		this.#globalCallbacks = new Set();
+		this.#globalCallbacks = [];
 	}
 
 	emit<K extends keyof TEventsMap>(
@@ -26,8 +26,8 @@ export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
 		event: K extends string ? K : never,
 		callback: TEventsMap[K],
 	) {
-		const callbacks = this.#callbacksMap.get(event) ?? new Set();
-		callbacks.add(callback);
+		const callbacks = this.#callbacksMap.get(event) ?? [];
+		callbacks.push(callback);
 		this.#callbacksMap.set(event as string, callbacks);
 	}
 
@@ -37,32 +37,32 @@ export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
 	) {
 		const callbacks = this.#callbacksMap.get(event);
 		if (!callbacks) return;
-		callbacks.delete(callback);
+		callbacks.splice(callbacks.indexOf(callback), 1);
 	}
 
 	subscribe<K extends keyof TEventsMap>(
 		event: K extends string ? K : never,
 		callback: TEventsMap[K],
 	) {
-		const callbacks = this.#callbacksMap.get(event) ?? new Set();
-		callbacks.add(callback);
+		const callbacks = this.#callbacksMap.get(event) ?? [];
+		callbacks.push(callback);
 		this.#callbacksMap.set(event as string, callbacks);
 		return () => {
-			callbacks.delete(callback);
+			callbacks.splice(callbacks.indexOf(callback), 1);
 		};
 	}
 
 	subscribeAll<K extends keyof TEventsMap>(
 		callback: (event: K, ...args: Parameters<TEventsMap[K]>) => void,
 	) {
-		this.#globalCallbacks.add(callback);
+		this.#globalCallbacks.push(callback);
 		return () => {
-			this.#globalCallbacks.delete(callback);
+			this.#globalCallbacks.splice(this.#globalCallbacks.indexOf(callback), 1);
 		};
 	}
 
 	unsubscribeAll<K extends keyof TEventsMap>(callback: TEventsMap[K]) {
-		this.#globalCallbacks.delete(callback);
+		this.#globalCallbacks.splice(this.#globalCallbacks.indexOf(callback), 1);
 	}
 
 	once<K extends keyof TEventsMap>(

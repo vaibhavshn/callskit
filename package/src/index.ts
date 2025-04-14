@@ -3,8 +3,34 @@ import {
 	type CallClientOptions,
 } from './lib/call-client/call-client';
 
-export function createCallClient(options: CallClientOptions) {
-	return new CallClient(options);
+export async function createCallClient(options: CallClientOptions) {
+	return new Promise<CallClient>((resolve, reject) => {
+		const client = new CallClient(options);
+		let socketConnected = false,
+			mediaConnected = false;
+		const checkConnection = () => {
+			if (socketConnected && mediaConnected) {
+				resolve(client);
+			}
+		};
+		client.once('connected', () => {
+			socketConnected = true;
+			checkConnection();
+		});
+		client.once('mediaConnected', () => {
+			mediaConnected = true;
+			checkConnection();
+		});
+		setTimeout(() => {
+			if (!socketConnected && !mediaConnected) {
+				reject(new Error('Both socket and media connections timed out'));
+			} else if (!socketConnected) {
+				reject(new Error('Socket connection timed out'));
+			} else if (!mediaConnected) {
+				reject(new Error('Media connection timed out'));
+			}
+		}, 10_000);
+	});
 }
 
 export type { CallClient, CallClientOptions };

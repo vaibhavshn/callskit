@@ -76,6 +76,12 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			prefix: import.meta.env.API_URL + '/partytracks',
 		});
 
+		const unsubSession = partyTracks.session$.subscribe(() => {
+			// listen and emit only once
+			this.emit('mediaConnected');
+			unsubSession.unsubscribe();
+		});
+
 		this.#ctx = {
 			socket,
 			partyTracks,

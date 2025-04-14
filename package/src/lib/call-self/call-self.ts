@@ -1,12 +1,10 @@
 import { resilientTrack$ } from 'partytracks/client';
 import {
 	BehaviorSubject,
-	combineLatest,
 	distinctUntilChanged,
 	Observable,
-	of,
-	shareReplay,
 	switchMap,
+	tap,
 } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
@@ -37,13 +35,15 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	#micEnabled$: BehaviorSubject<boolean>;
 	#micTrack$: Observable<MediaStreamTrack>;
+	#micEnabled: boolean = false;
 	#micTrack: MediaStreamTrack | undefined;
-	#micTrackId$ = new BehaviorSubject<string | undefined>(undefined);
+	#micTrackId: string | undefined;
 
 	#cameraEnabled$: BehaviorSubject<boolean>;
 	#cameraTrack$: Observable<MediaStreamTrack>;
+	#cameraEnabled: boolean = false;
 	#cameraTrack: MediaStreamTrack | undefined;
-	#cameraTrackId$ = new BehaviorSubject<string | undefined>(undefined);
+	#cameraTrackId: string | undefined;
 
 	constructor(options: CallSelfOptions) {
 		super();
@@ -59,125 +59,89 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		);
 
 		this.#micTrack$ = this.#micEnabled$.pipe(
+			distinctUntilChanged(),
 			switchMap((enabled) =>
 				enabled
-					? resilientTrack$({
-							kind: 'audioinput',
-							constraints: {
-								echoCancellation: true,
-								autoGainControl: true,
-								noiseSuppression: true,
-							},
-						})
+					? resilientTrack$({ kind: 'audioinput' })
 					: inaudibleAudioTrack$,
 			),
-			shareReplay({
-				refCount: true,
-				bufferSize: 1,
+			tap((track) => {
+				this.#micTrack = track;
 			}),
 		);
 
-		this.#micTrack$.subscribe((track) => {
-			this.#ctx.logger.debug('🎤 received local mic track', track);
-			this.#micTrack = track;
-		});
+		const micMetadata$ = this.#ctx.partyTracks.push(this.#micTrack$);
 
-		combineLatest([
-			this.#micEnabled$.pipe(distinctUntilChanged()),
-			this.#micTrackId$.pipe(distinctUntilChanged()),
-		]).subscribe(([micEnabled, micTrackId]) => {
+		micMetadata$.subscribe((metadata) => {
+			const micEnabled = this.#micEnabled$.value;
 			const micTrack = this.#micTrack;
-			this.#ctx.logger.debug('🎤 latest mic data', {
-				micTrackId,
-				micEnabled,
-				micTrack,
-			});
+
 			if (micEnabled && micTrack) {
+				const micTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#micEnabled = true;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
-					updates: { micEnabled, micTrackId },
+					updates: {
+						micEnabled: true,
+						micTrackId,
+					},
 				});
-				this.emit('micUpdate', { micEnabled, micTrack });
-			} else if (!micEnabled && !micTrack) {
+				this.emit('micUpdate', {
+					micEnabled: true,
+					micTrack,
+				});
+			} else if (!micEnabled) {
+				this.#micEnabled = false;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
-					updates: { micEnabled: false, micTrackId: undefined },
+					updates: { micEnabled: false },
 				});
 				this.emit('micUpdate', { micEnabled: false });
 			}
 		});
 
-		// Push local mic track
-		const micMetadata$ = this.#ctx.partyTracks.push(this.#micTrack$, {
-			sendEncodings$: of([{ maxBitrate: 64_000, networkPriority: 'high' }]),
-		});
-
-		micMetadata$.subscribe((metadata) => {
-			const trackId = `${metadata.sessionId}/${metadata.trackName}`;
-			this.#ctx.logger.debug('🎤 got local mic trackId:', trackId);
-			this.#micTrackId$.next(trackId);
-		});
-
 		this.#cameraTrack$ = this.#cameraEnabled$.pipe(
+			distinctUntilChanged(),
 			switchMap((enabled) =>
 				enabled
-					? resilientTrack$({
-							kind: 'videoinput',
-							constraints: {
-								width: { ideal: 1280 },
-								height: { ideal: 720 },
-								aspectRatio: 16 / 9,
-								backgroundBlur: true,
-							},
-						})
+					? resilientTrack$({ kind: 'videoinput' })
 					: blackCanvasStreamTrack$,
 			),
-			shareReplay({
-				refCount: true,
-				bufferSize: 1,
+			tap((track) => {
+				this.#cameraTrack = track;
 			}),
 		);
 
-		this.#cameraTrack$.subscribe((track) => {
-			this.#ctx.logger.debug('📷 received local camera track', track);
-			this.#cameraTrack = track;
-		});
+		const cameraMetadata$ = this.#ctx.partyTracks.push(this.#cameraTrack$);
 
-		combineLatest([
-			this.#cameraEnabled$.pipe(distinctUntilChanged()),
-			this.#cameraTrackId$.pipe(distinctUntilChanged()),
-		]).subscribe(([cameraEnabled, cameraTrackId]) => {
-			const cameraTrack = this.cameraTrack;
-			this.#ctx.logger.debug('📷 latest camera data', {
-				cameraTrackId,
-				cameraEnabled,
-				cameraTrack,
-			});
+		cameraMetadata$.subscribe((metadata) => {
+			const cameraEnabled = this.#cameraEnabled$.value;
+			const cameraTrack = this.#cameraTrack;
+
 			if (cameraEnabled && cameraTrack) {
+				const cameraTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#cameraTrackId = cameraTrackId;
+				this.#cameraEnabled = true;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
-					updates: { cameraEnabled, cameraTrackId },
+					updates: {
+						cameraEnabled: true,
+						cameraTrackId,
+					},
 				});
-				this.emit('cameraUpdate', { cameraEnabled, cameraTrack });
-			} else if (!cameraEnabled && !cameraTrack) {
+				this.emit('cameraUpdate', {
+					cameraEnabled: true,
+					cameraTrack,
+				});
+			} else if (!cameraEnabled) {
+				this.#cameraEnabled = false;
+				this.#cameraTrackId = undefined;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
-					updates: { cameraEnabled: false, cameraTrackId: undefined },
+					updates: { cameraEnabled: false },
 				});
 				this.emit('cameraUpdate', { cameraEnabled: false });
 			}
-		});
-
-		// Push local camera track
-		const cameraMetadata$ = this.#ctx.partyTracks.push(this.#cameraTrack$, {
-			sendEncodings$: this.#ctx.cameraEncodings$,
-		});
-
-		cameraMetadata$.subscribe((metadata) => {
-			const trackId = `${metadata.sessionId}/${metadata.trackName}`;
-			this.#ctx.logger.debug('📷 got local camera trackId:', trackId);
-			console.log('camera metadata', trackId, this.cameraEnabled);
-			this.#cameraTrackId$.next(trackId);
 		});
 	}
 
@@ -186,7 +150,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	stopMic() {
-		this.#micTrackId$.next(undefined);
 		this.#micEnabled$.next(false);
 	}
 
@@ -195,43 +158,35 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	stopCamera() {
-		this.#cameraTrackId$.next(undefined);
 		this.#cameraEnabled$.next(false);
 	}
 
 	get micEnabled(): boolean {
-		return this.#micEnabled$.value;
+		return this.#micEnabled;
 	}
 
 	get micTrack(): MediaStreamTrack | undefined {
-		return this.micEnabled && this.#micTrack ? this.#micTrack : undefined;
+		return this.#micEnabled && this.#micTrack ? this.#micTrack : undefined;
 	}
 
 	get cameraEnabled(): boolean {
-		return this.#cameraEnabled$.value;
+		return this.#cameraEnabled;
 	}
 
 	get cameraTrack(): MediaStreamTrack | undefined {
-		return this.cameraEnabled && this.#cameraTrack
+		return this.#cameraEnabled && this.#cameraTrack
 			? this.#cameraTrack
 			: undefined;
 	}
 
 	toJSON(): SerializedUser {
-		const micTrackId = this.#micTrackId$.value;
-		const micEnabled = this.micEnabled && typeof micTrackId == 'string';
-
-		const cameraTrackId = this.#cameraTrackId$.value;
-		const cameraEnabled =
-			this.cameraEnabled && typeof cameraTrackId === 'string';
-
 		return {
 			id: this.id,
 			name: this.name,
-			micEnabled,
-			micTrackId: micEnabled ? micTrackId : undefined,
-			cameraEnabled,
-			cameraTrackId: cameraEnabled ? cameraTrackId : undefined,
+			micEnabled: this.micEnabled,
+			micTrackId: this.#micTrackId,
+			cameraEnabled: this.cameraEnabled,
+			cameraTrackId: this.#cameraTrackId,
 		};
 	}
 }

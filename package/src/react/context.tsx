@@ -1,5 +1,5 @@
 import throttle from 'lodash-es/throttle';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import invariant from 'tiny-invariant';
 import { CallClient } from '../lib/call-client/call-client';
 import { shallow } from './shallow';
@@ -73,7 +73,7 @@ export function useCallSelector<CallSlice>(
 
 	const [slice, setSlice] = React.useState(() => selector(call));
 	const prevSlice = React.useRef<CallSlice>(slice);
-	const [, forceUpdate] = React.useReducer((state) => !state, false);
+	const [, forceUpdate] = React.useReducer((state) => state + 1, 0);
 
 	React.useEffect(() => {
 		if (slice instanceof EventsHandler) {
