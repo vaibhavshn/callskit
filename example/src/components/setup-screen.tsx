@@ -1,4 +1,4 @@
-import { ArrowEnterLeftFilled } from '@fluentui/react-icons';
+import { ArrowEnterLeftFilled, SpinnerIosRegular } from '@fluentui/react-icons';
 import { useCall, useCallSelector } from 'callskit/react';
 import { useState, useEffect } from 'react';
 import { ParticipantTile } from './participant-tile';
@@ -9,17 +9,11 @@ export function SetupScreen() {
 	const call = useCall();
 	const [name, setName] = useState(call.self.name);
 	const self = useCallSelector((call) => call.self);
+	const [isJoining, setIsJoining] = useState(false);
 
 	useEffect(() => {
-		// navigator.mediaDevices
-		// 	.getUserMedia({ audio: true, video: true })
-		// 	.then((stream) => {
-		// 		stream.getTracks().map((track) => track.stop());
-		// 	});
-	}, []);
-
-	useEffect(() => {
-		call.self.name = name;
+		// call.self.name = name;
+		call.self.setName(name);
 	}, [name, call]);
 
 	return (
@@ -54,9 +48,28 @@ export function SetupScreen() {
 					}}
 				/>
 
-				<Button className="text-base" onClick={() => call.join()}>
-					<ArrowEnterLeftFilled />
-					Join
+				<Button
+					className="text-base"
+					onClick={() => {
+						setIsJoining(true);
+						call.join();
+						setTimeout(() => {
+							setIsJoining(true);
+						}, 9000);
+					}}
+					disabled={isJoining}
+				>
+					{isJoining ? (
+						<>
+							<SpinnerIosRegular className="animate-spin" />
+							Joining...
+						</>
+					) : (
+						<>
+							<ArrowEnterLeftFilled />
+							Join
+						</>
+					)}
 				</Button>
 			</div>
 		</div>

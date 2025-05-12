@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 let env = {
-	SOCKET_URL: 'http://localhost:1999',
+	SOCKET_URL: 'http://127.0.0.1:1999',
 	API_URL: 'http://localhost:8787',
 };
 

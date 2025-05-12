@@ -152,7 +152,9 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			}),
 		);
 
-		const cameraTrack$ = this.#ctx.partyTracks.pull(cameraMetadata$);
+		const cameraTrack$ = this.#ctx.partyTracks.pull(cameraMetadata$, {
+			simulcast: { preferredRid$: this.#ctx.cameraRid$ },
+		});
 
 		cameraTrack$.subscribe((track) => {
 			console.log('emitting event', true, track);
