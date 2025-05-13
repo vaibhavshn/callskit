@@ -7,8 +7,8 @@ let env = {
 
 if (process.env.NODE_ENV === 'production') {
 	env = {
-		SOCKET_URL: 'https://callskit.vaibhavshn.partykit.dev',
-		API_URL: 'https://callskit.workers.dev',
+		SOCKET_URL: 'https://callskit-socket.vaibhavshn.partykit.dev',
+		API_URL: 'https://callskit-server.vaibhavshn-in.workers.dev',
 	};
 }
 
