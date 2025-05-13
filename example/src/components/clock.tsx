@@ -1,4 +1,4 @@
-import { useCall, useCallSelector } from 'callskit/react';
+import { useCall } from 'callskit/react';
 import clsx from 'clsx';
 import { ComponentProps, useEffect, useMemo, useState } from 'react';
 
