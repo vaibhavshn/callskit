@@ -22,8 +22,7 @@ function App() {
 		const room = roomNameFromUrl !== '' ? roomNameFromUrl : 'abc-xyz';
 		createCall({
 			room,
-			// displayName: 'User ' + Math.random().toString(36).substring(7),
-			displayName: 'Participant',
+			displayName: 'User ' + Math.random().toString(36).substring(7),
 			logLevel: 'debug',
 			config: { maxOnStageParticipants: 9, preferredCameraQuality: 'a' },
 			// autoJoin: true,
