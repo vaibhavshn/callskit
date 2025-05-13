@@ -22,26 +22,27 @@ export function Grid() {
 	});
 
 	return (
-		<div ref={$grid} className="size-full relative">
+		<div ref={$grid} className="relative size-full">
 			<AnimatePresence>
-				{allParticipants.map((participant, index) => {
-					const { top, left } = grid.getPosition(index);
+				{dimensions.width !== 0 &&
+					allParticipants.map((participant, index) => {
+						const { top, left } = grid.getPosition(index);
 
-					return (
-						<ParticipantTile
-							participant={participant}
-							key={participant.id}
-							style={{
-								position: 'absolute',
-								top,
-								left,
-								width: grid.width,
-								height: grid.height,
-								transition: 'all 0.3s',
-							}}
-						/>
-					);
-				})}
+						return (
+							<ParticipantTile
+								participant={participant}
+								key={participant.id}
+								style={{
+									position: 'absolute',
+									top,
+									left,
+									width: grid.width,
+									height: grid.height,
+									transition: 'all 0.3s',
+								}}
+							/>
+						);
+					})}
 			</AnimatePresence>
 		</div>
 	);

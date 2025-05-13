@@ -38,8 +38,8 @@
 		"dev": "vite dev"
 	},
 	"dependencies": {
-		"partysocket": "^1.1.3",
-		"partytracks": "^0.0.33",
+		"partysocket": "^1.1.4",
+		"partytracks": "^0.0.38",
 		"rxjs": "^7.8.2",
 		"tiny-invariant": "^1.3.3"
 	},

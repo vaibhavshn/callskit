@@ -1,5 +1,11 @@
 import { resilientTrack$ } from 'partytracks/client';
-import { BehaviorSubject, distinctUntilChanged, switchMap, tap } from 'rxjs';
+import {
+	BehaviorSubject,
+	distinctUntilChanged,
+	of,
+	switchMap,
+	tap,
+} from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import {
@@ -67,7 +73,11 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			}),
 		);
 
-		const micMetadata$ = this.#ctx.partyTracks.push(micTrack$);
+		const micMetadata$ = this.#ctx.partyTracks.push(micTrack$, {
+			sendEncodings$: of([
+				{ networkPriority: 'high' },
+			] satisfies RTCRtpEncodingParameters[]),
+		});
 
 		micMetadata$.subscribe((metadata) => {
 			const micEnabled = this.#micEnabled$.value;
@@ -104,7 +114,16 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			distinctUntilChanged(),
 			switchMap((enabled) =>
 				enabled
-					? resilientTrack$({ kind: 'videoinput' })
+					? resilientTrack$({
+							kind: 'videoinput',
+							constraints: {
+								frameRate: 24,
+								width: { ideal: 1280 },
+								height: { ideal: 720 },
+								aspectRatio: 16 / 9,
+								facingMode: 'user',
+							},
+						})
 					: blackCanvasStreamTrack$,
 			),
 			tap((track) => {
@@ -112,7 +131,9 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			}),
 		);
 
-		const cameraMetadata$ = this.#ctx.partyTracks.push(cameraTrack$);
+		const cameraMetadata$ = this.#ctx.partyTracks.push(cameraTrack$, {
+			sendEncodings$: this.#ctx.cameraEncodings$,
+		});
 
 		cameraMetadata$.subscribe((metadata) => {
 			const cameraEnabled = this.#cameraEnabled$.value;
@@ -177,7 +198,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				if (this.volume !== lastVolume) {
 					this.emit('volumeChange', this.volume, lastVolume);
 				}
-			}, 400);
+			}, 500);
 		}
 	}
 
@@ -219,6 +240,12 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	get cameraTrack(): MediaStreamTrack | undefined {
 		return this.#cameraEnabled ? this.#cameraTrack : undefined;
+	}
+
+	setName(name: string) {
+		const oldName = this.name;
+		this.name = name;
+		this.emit('nameChange', this.name, oldName);
 	}
 
 	toJSON(): SerializedUser {

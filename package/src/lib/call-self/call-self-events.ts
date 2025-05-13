@@ -20,6 +20,7 @@ export type ParticipantMediaEvents = {
 			  },
 	) => void;
 	volumeChange: (volume: number, lastVolume: number) => void;
+	nameChange: (name: string, oldName: string) => void;
 };
 
 export type CallSelfEvents = ParticipantMediaEvents;

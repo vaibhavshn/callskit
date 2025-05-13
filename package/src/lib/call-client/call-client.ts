@@ -138,7 +138,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 
 	#onMessage(event: MessageEvent<string>) {
 		const ev: CallEvent = JSON.parse(event.data);
-		this.#logger.info('CallSocket:Event', ev);
+		this.#logger.debug('📩 CallSocket:Event', ev);
 
 		switch (ev.event) {
 			case 'connected':
