@@ -45,6 +45,7 @@
 	},
 	"devDependencies": {
 		"@types/lodash-es": "^4.17.12",
-		"lodash-es": "^4.17.21"
+		"lodash-es": "^4.17.21",
+		"tsup": "^8.4.0"
 	}
 }
