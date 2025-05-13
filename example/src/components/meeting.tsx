@@ -102,7 +102,7 @@ export function Meeting() {
 				className="m-auto w-full max-w-sm flex-col gap-3 rounded-lg p-4 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex"
 			>
 				<h3 className="text-xl font-semibold">Play audio</h3>
-				<p className="text-sm text-zinc-700">
+				<p className="text-sm text-zinc-700 dark:text-zinc-400">
 					Browser prevented meeting audio from being played automatically, press{' '}
 					<strong>Play</strong> to continue.
 				</p>

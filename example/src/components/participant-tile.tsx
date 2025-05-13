@@ -3,7 +3,6 @@ import { type CallSelf, type CallParticipant } from 'callskit';
 import { useCall } from 'callskit/react';
 import clsx from 'clsx';
 import React, { useEffect, useRef } from 'react';
-import { AudioVisualizer } from './audio-visualizer';
 
 export function ParticipantTile({
 	className,
@@ -17,6 +16,7 @@ export function ParticipantTile({
 	const $video = useRef<HTMLVideoElement>(null);
 
 	useEffect(() => {
+		console.log(participant.cameraTrack, participant.cameraEnabled);
 		if (participant.cameraEnabled && participant.cameraTrack) {
 			$video.current!.srcObject = new MediaStream([participant.cameraTrack]);
 			$video.current!.play();

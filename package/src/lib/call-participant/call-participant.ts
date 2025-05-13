@@ -73,7 +73,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				this.emit('micUpdate', { micEnabled: false });
 				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
-				this.#ctx.call.participants.stage.emit('micUpdate', this);
+				// this.#ctx.call.participants.stage.emit('micUpdate', this);
 				// this.#startVolumeMeasurement();
 			} else if (enabled && this.#micTrack) {
 				console.log('mic-subscribe:true');
@@ -84,7 +84,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				});
 				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
-				this.#ctx.call.participants.stage.emit('micUpdate', this);
+				// this.#ctx.call.participants.stage.emit('micUpdate', this);
 				// this.#stopVolumeMeasurement();
 			} else {
 				console.log('subscribe:other', enabled, this.#micTrack);
@@ -112,7 +112,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.emit('micUpdate', { micEnabled: true, micTrack: track });
 			this.#ctx.call.participants.emit('micUpdate', this);
 			this.#ctx.call.participants.joined.emit('micUpdate', this);
-			this.#ctx.call.participants.stage.emit('micUpdate', this);
+			// this.#ctx.call.participants.stage.emit('micUpdate', this);
 			this.#startVolumeMeasurement();
 		});
 
@@ -124,7 +124,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				this.emit('cameraUpdate', { cameraEnabled: false });
 				this.#ctx.call.participants.emit('cameraUpdate', this);
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
-				this.#ctx.call.participants.stage.emit('cameraUpdate', this);
+				// this.#ctx.call.participants.stage.emit('cameraUpdate', this);
 			} else if (enabled && this.#cameraTrack) {
 				console.log('subscribe:true');
 				this.#cameraEnabled = true;
@@ -134,7 +134,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				});
 				this.#ctx.call.participants.emit('cameraUpdate', this);
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
-				this.#ctx.call.participants.stage.emit('cameraUpdate', this);
+				// this.#ctx.call.participants.stage.emit('cameraUpdate', this);
 			} else {
 				console.log('subscribe:other', enabled, this.#cameraTrack);
 			}
@@ -162,7 +162,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#cameraTrack = track;
 			this.emit('cameraUpdate', { cameraEnabled: true, cameraTrack: track });
 			this.#ctx.call.participants.emit('cameraUpdate', this);
-			this.#ctx.call.participants.stage.emit('cameraUpdate', this);
+			this.#ctx.call.participants.joined.emit('cameraUpdate', this);
 		});
 	}
 

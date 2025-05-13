@@ -9,7 +9,7 @@ export function Grid() {
 	const dimensions = useGridDimensions($grid);
 
 	const participants = useCallSelector(
-		(call) => call.participants.stage,
+		(call) => call.participants.joined,
 	).toArray();
 	const self = useCallSelector((call) => call.self);
 	const allParticipants = [...participants, self];

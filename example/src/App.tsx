@@ -18,10 +18,12 @@ function App() {
 	const [call, createCall] = useCreateCall();
 
 	useEffect(() => {
+		const roomNameFromUrl = window.location.pathname.slice(1);
+		const room = roomNameFromUrl !== '' ? roomNameFromUrl : 'abc-xyz';
 		createCall({
-			room: 'abc-xyz2',
+			room,
 			// displayName: 'User ' + Math.random().toString(36).substring(7),
-			displayName: 'Vaibhav',
+			displayName: 'Participant',
 			logLevel: 'debug',
 			config: { maxOnStageParticipants: 9, preferredCameraQuality: 'a' },
 			// autoJoin: true,
