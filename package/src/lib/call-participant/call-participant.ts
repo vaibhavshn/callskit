@@ -74,7 +74,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
 				this.#ctx.call.participants.stage.emit('micUpdate', this);
-				this.#startVolumeMeasurement();
+				// this.#startVolumeMeasurement();
 			} else if (enabled && this.#micTrack) {
 				console.log('mic-subscribe:true');
 				this.#micEnabled = true;
@@ -85,7 +85,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
 				this.#ctx.call.participants.stage.emit('micUpdate', this);
-				this.#stopVolumeMeasurement();
+				// this.#stopVolumeMeasurement();
 			} else {
 				console.log('subscribe:other', enabled, this.#micTrack);
 			}

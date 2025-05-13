@@ -36,7 +36,7 @@ export function ParticipantTile({
 		>
 			{/* Name Tag */}
 			<div className="absolute bottom-3 left-3 z-40 flex h-8 items-center gap-1 rounded-md border bg-white/60 px-1.5 text-sm backdrop-blur-md dark:bg-zinc-700/70">
-				<AudioVisualizer participant={participant} />
+				{/* <AudioVisualizer participant={participant} /> */}
 				<span className="flex shrink-0 grow items-center gap-1">
 					<span className="line-clamp-1">{participant.name}</span>
 					{isSelf && <span className="text-xs text-zinc-500">(you)</span>}

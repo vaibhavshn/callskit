@@ -98,7 +98,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					micEnabled: true,
 					micTrack,
 				});
-				this.#startVolumeMeasurement();
+				// this.#startVolumeMeasurement();
 			} else if (!micEnabled) {
 				this.#micEnabled = false;
 				this.#ctx.socket.sendAction({
@@ -106,7 +106,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					updates: { micEnabled: false },
 				});
 				this.emit('micUpdate', { micEnabled: false });
-				this.#stopVolumeMeasurement();
+				// this.#stopVolumeMeasurement();
 			}
 		});
 

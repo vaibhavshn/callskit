@@ -19,8 +19,9 @@ function App() {
 
 	useEffect(() => {
 		createCall({
-			room: 'abc-xyz',
-			displayName: 'User ' + Math.random().toString(36).substring(7),
+			room: 'abc-xyz2',
+			// displayName: 'User ' + Math.random().toString(36).substring(7),
+			displayName: 'Vaibhav',
 			logLevel: 'debug',
 			config: { maxOnStageParticipants: 9, preferredCameraQuality: 'a' },
 			// autoJoin: true,
