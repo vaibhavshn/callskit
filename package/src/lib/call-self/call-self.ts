@@ -1,17 +1,7 @@
-import { resilientTrack$ } from 'partytracks/client';
-import {
-	BehaviorSubject,
-	distinctUntilChanged,
-	of,
-	switchMap,
-	tap,
-} from 'rxjs';
+import { getCamera, getMic, type MediaDevice } from 'partytracks/client';
+import { BehaviorSubject, of } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
-import {
-	blackCanvasStreamTrack$,
-	inaudibleAudioTrack$,
-} from '../../utils/tracks';
 import { type CallClientOptions } from '../call-client/call-client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
 import type { CallSelfEvents } from './call-self-events';
@@ -33,55 +23,45 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	#ctx: CallContext;
 
-	#micEnabled$: BehaviorSubject<boolean>;
-	#micEnabled: boolean = false;
-	#micTrack: MediaStreamTrack | undefined;
-	#micTrackId: string | undefined;
+	#mic: MediaDevice;
+	#camera: MediaDevice;
 
-	#cameraEnabled$: BehaviorSubject<boolean>;
-	#cameraEnabled: boolean = false;
-	#cameraTrack: MediaStreamTrack | undefined;
+	#micTrackId: string | undefined;
+	#micTrack: MediaStreamTrack | undefined;
+
 	#cameraTrackId: string | undefined;
+	#cameraTrack: MediaStreamTrack | undefined;
 
 	constructor(options: CallSelfOptions) {
 		super();
 		this.name = options.name;
 		this.#ctx = getCurrentCallContext();
 
-		this.#micEnabled$ = new BehaviorSubject<boolean>(
-			options.defaults?.audio ?? false,
-		);
+		this.#mic = getMic();
+		this.#camera = getCamera();
 
-		this.#cameraEnabled$ = new BehaviorSubject<boolean>(
-			options.defaults?.video ?? false,
-		);
+		if (options.defaults?.audio) {
+			this.startMic();
+		}
 
-		const micTrack$ = this.#micEnabled$.pipe(
-			distinctUntilChanged(),
-			switchMap((enabled) =>
-				enabled
-					? resilientTrack$({ kind: 'audioinput' })
-					: inaudibleAudioTrack$,
-			),
-			tap((track) => {
-				this.#micTrack = track;
-			}),
-		);
+		if (options.defaults?.video) {
+			this.startCamera();
+		}
 
-		const micMetadata$ = this.#ctx.partyTracks.push(micTrack$, {
+		const micMetadata$ = this.#ctx.partyTracks.push(this.#mic.broadcastTrack$, {
 			sendEncodings$: of([
 				{ networkPriority: 'high' },
 			] satisfies RTCRtpEncodingParameters[]),
 		});
 
 		micMetadata$.subscribe((metadata) => {
-			const micEnabled = this.#micEnabled$.value;
+			const micEnabled = (this.#mic.isBroadcasting$ as BehaviorSubject<boolean>)
+				.value;
 			const micTrack = this.#micTrack;
 
 			if (micEnabled && micTrack) {
 				const micTrackId = `${metadata.sessionId}/${metadata.trackName}`;
 				this.#micTrackId = micTrackId;
-				this.#micEnabled = true;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
 					updates: {
@@ -94,7 +74,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					micTrack,
 				});
 			} else if (!micEnabled) {
-				this.#micEnabled = false;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
 					updates: { micEnabled: false },
@@ -103,39 +82,30 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			}
 		});
 
-		const cameraTrack$ = this.#cameraEnabled$.pipe(
-			distinctUntilChanged(),
-			switchMap((enabled) =>
-				enabled
-					? resilientTrack$({
-							kind: 'videoinput',
-							constraints: {
-								frameRate: 24,
-								width: { ideal: 1280 },
-								height: { ideal: 720 },
-								aspectRatio: 16 / 9,
-								facingMode: 'user',
-							},
-						})
-					: blackCanvasStreamTrack$,
-			),
-			tap((track) => {
-				this.#cameraTrack = track;
-			}),
+		const cameraMetadata$ = this.#ctx.partyTracks.push(
+			this.#camera.broadcastTrack$,
+			{
+				sendEncodings$: this.#ctx.cameraEncodings$,
+			},
 		);
 
-		const cameraMetadata$ = this.#ctx.partyTracks.push(cameraTrack$, {
-			sendEncodings$: this.#ctx.cameraEncodings$,
+		this.#mic.broadcastTrack$.subscribe((track) => {
+			this.#micTrack = track;
+		});
+
+		this.#camera.broadcastTrack$.subscribe((track) => {
+			this.#cameraTrack = track;
 		});
 
 		cameraMetadata$.subscribe((metadata) => {
-			const cameraEnabled = this.#cameraEnabled$.value;
+			const cameraEnabled = (
+				this.#camera.isBroadcasting$ as BehaviorSubject<boolean>
+			).value;
 			const cameraTrack = this.#cameraTrack;
 
 			if (cameraEnabled && cameraTrack) {
 				const cameraTrackId = `${metadata.sessionId}/${metadata.trackName}`;
 				this.#cameraTrackId = cameraTrackId;
-				this.#cameraEnabled = true;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
 					updates: {
@@ -148,7 +118,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					cameraTrack,
 				});
 			} else if (!cameraEnabled) {
-				this.#cameraEnabled = false;
 				this.#cameraTrackId = undefined;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
@@ -160,35 +129,35 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	startMic() {
-		this.#micEnabled$.next(true);
+		this.#mic.startBroadcasting();
 	}
 
 	stopMic() {
-		this.#micEnabled$.next(false);
+		this.#mic.stopBroadcasting();
 	}
 
 	startCamera() {
-		this.#cameraEnabled$.next(true);
+		this.#camera.startBroadcasting();
 	}
 
 	stopCamera() {
-		this.#cameraEnabled$.next(false);
+		this.#camera.stopBroadcasting();
 	}
 
 	get micEnabled(): boolean {
-		return this.#micEnabled;
+		return (this.#mic.isBroadcasting$ as BehaviorSubject<boolean>).value;
 	}
 
 	get micTrack(): MediaStreamTrack | undefined {
-		return this.#micEnabled ? this.#micTrack : undefined;
+		return this.#micTrack;
 	}
 
 	get cameraEnabled(): boolean {
-		return this.#cameraEnabled;
+		return (this.#camera.isBroadcasting$ as BehaviorSubject<boolean>).value;
 	}
 
 	get cameraTrack(): MediaStreamTrack | undefined {
-		return this.#cameraEnabled ? this.#cameraTrack : undefined;
+		return this.#cameraTrack;
 	}
 
 	setName(name: string) {
