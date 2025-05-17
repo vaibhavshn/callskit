@@ -1,5 +1,5 @@
 import { PartyTracks, setLogLevel } from 'partytracks/client';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import type { CallEvent } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import { Logger, type LogLevel } from '../../utils/logger';
@@ -76,11 +76,14 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			prefix: import.meta.env.API_URL + '/partytracks',
 		});
 
-		const unsubSession = partyTracks.session$.subscribe(() => {
-			// listen and emit only once
-			this.emit('mediaConnected');
-			unsubSession.unsubscribe();
-		});
+		let unsubSession: Subscription | undefined = partyTracks.session$.subscribe(
+			() => {
+				// listen and emit only once
+				this.emit('mediaConnected');
+				unsubSession!.unsubscribe();
+				unsubSession = undefined;
+			},
+		);
 
 		this.#ctx = {
 			socket,
@@ -93,19 +96,17 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			cameraEncodings$: new BehaviorSubject<RTCRtpEncodingParameters[]>(
 				cameraEncodings,
 			),
-			volumeContext: new AudioContext(),
-			maxOnStageParticipants: options.config?.maxOnStageParticipants ?? 9,
+			// volumeContext: new AudioContext(),
+			// maxOnStageParticipants: options.config?.maxOnStageParticipants ?? 9,
 			onError: options.onError,
 		};
 
-		this.self = this.#runWithContext(
-			() =>
-				new CallSelf({ name: options.displayName, defaults: options.defaults }),
+		this.self = runWithContext(this.#ctx, () =>
+			new CallSelf({ name: options.displayName, defaults: options.defaults }),
 		);
-		this.participants = this.#runWithContext(
-			() => new ParticipantsController(),
+		this.participants = runWithContext(this.#ctx, () => new ParticipantsController(),
 		);
-		this.chat = this.#runWithContext(() => new CallChat());
+		this.chat = runWithContext(this.#ctx, () => new CallChat());
 	}
 
 	join() {
@@ -132,10 +133,6 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 		}
 	}
 
-	#runWithContext<T>(fn: () => T): T {
-		return runWithContext(this.#ctx, fn);
-	}
-
 	#onMessage(event: MessageEvent<string>) {
 		const ev: CallEvent = JSON.parse(event.data);
 		this.#logger.debug('📩 CallSocket:Event', ev);
@@ -153,7 +150,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 				if (this.state !== 'connected') return;
 
 				const user_objects = ev.participants;
-				this.#runWithContext(() =>
+				runWithContext(this.#ctx, () =>
 					user_objects.map((obj) => CallParticipant.fromJSON(obj)),
 				).forEach((participant) => {
 					this.participants.addParticipant(participant);
@@ -166,7 +163,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			}
 
 			case 'participant/joined': {
-				const participant = this.#runWithContext(() =>
+				const participant = runWithContext(this.#ctx, () =>
 					CallParticipant.fromJSON(ev.participant),
 				);
 				this.participants.addParticipant(participant);

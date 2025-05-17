@@ -5,8 +5,7 @@
 		"deploy": "wrangler deploy --minify"
 	},
 	"dependencies": {
-		"hono": "^4.7.9",
-		"partytracks": "^0.0.38"
+		"hono": "^4.7.9"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250513.0",

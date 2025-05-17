@@ -4,7 +4,6 @@ import { EventsHandler } from '../../utils/events-handler';
 import type { CallParticipantEvents } from './call-participant-events';
 import { type TrackMetadata } from 'partytracks/client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
-import { normalize_rms } from '../../utils/volume';
 
 interface CallParticipantOptions extends Partial<SerializedUser> {
 	id: string;
@@ -24,8 +23,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 	id: string;
 	name: string;
 
-	volume: number = -Infinity;
-
 	#ctx: CallContext;
 
 	#micEnabled$: BehaviorSubject<boolean>;
@@ -39,8 +36,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 
 	#cameraEnabled: boolean = false;
 	#cameraTrack: MediaStreamTrack | undefined;
-
-	#volumeInterval: NodeJS.Timeout | undefined;
 
 	constructor(options: CallParticipantOptions) {
 		super();
@@ -66,17 +61,12 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		);
 
 		this.#micEnabled$.subscribe((enabled) => {
-			console.log('mic-subscribe', { enabled });
 			if (!enabled) {
-				console.log('mic-subscribe:false');
 				this.#micEnabled = false;
 				this.emit('micUpdate', { micEnabled: false });
 				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
-				// this.#ctx.call.participants.stage.emit('micUpdate', this);
-				// this.#startVolumeMeasurement();
 			} else if (enabled && this.#micTrack) {
-				console.log('mic-subscribe:true');
 				this.#micEnabled = true;
 				this.emit('micUpdate', {
 					micEnabled: true,
@@ -84,10 +74,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				});
 				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
-				// this.#ctx.call.participants.stage.emit('micUpdate', this);
-				// this.#stopVolumeMeasurement();
-			} else {
-				console.log('subscribe:other', enabled, this.#micTrack);
 			}
 		});
 
@@ -106,27 +92,20 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		const micTrack$ = this.#ctx.partyTracks.pull(micMetadata$);
 
 		micTrack$.subscribe((track) => {
-			console.log('emitting event', true, track);
 			this.#micEnabled = true;
 			this.#micTrack = track;
 			this.emit('micUpdate', { micEnabled: true, micTrack: track });
 			this.#ctx.call.participants.emit('micUpdate', this);
 			this.#ctx.call.participants.joined.emit('micUpdate', this);
-			// this.#ctx.call.participants.stage.emit('micUpdate', this);
-			this.#startVolumeMeasurement();
 		});
 
 		this.#cameraEnabled$.subscribe((enabled) => {
-			console.log('subscribe', { enabled });
 			if (!enabled) {
-				console.log('subscribe:false');
 				this.#cameraEnabled = false;
 				this.emit('cameraUpdate', { cameraEnabled: false });
 				this.#ctx.call.participants.emit('cameraUpdate', this);
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
-				// this.#ctx.call.participants.stage.emit('cameraUpdate', this);
 			} else if (enabled && this.#cameraTrack) {
-				console.log('subscribe:true');
 				this.#cameraEnabled = true;
 				this.emit('cameraUpdate', {
 					cameraEnabled: true,
@@ -134,9 +113,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				});
 				this.#ctx.call.participants.emit('cameraUpdate', this);
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
-				// this.#ctx.call.participants.stage.emit('cameraUpdate', this);
-			} else {
-				console.log('subscribe:other', enabled, this.#cameraTrack);
 			}
 		});
 
@@ -157,7 +133,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		});
 
 		cameraTrack$.subscribe((track) => {
-			console.log('emitting event', true, track);
 			this.#cameraEnabled = true;
 			this.#cameraTrack = track;
 			this.emit('cameraUpdate', { cameraEnabled: true, cameraTrack: track });
@@ -187,55 +162,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		} else {
 			this.#cameraEnabled$.next(false);
 		}
-	}
-
-	#startVolumeMeasurement() {
-		this.#stopVolumeMeasurement();
-
-		if (this.#micEnabled && this.#micTrack) {
-			this.#ctx.logger.debug('📏 starting participant volume estimation');
-			const ctx = this.#ctx.volumeContext;
-			ctx.resume();
-			const stream = new MediaStream([this.#micTrack]);
-			const source = ctx.createMediaStreamSource(stream);
-			const analyser = ctx.createAnalyser();
-			analyser.fftSize = 2048;
-			source.connect(analyser);
-			const bufferLength = analyser.frequencyBinCount;
-			const dataArray = new Uint8Array(bufferLength);
-
-			this.#volumeInterval = setInterval(() => {
-				analyser.getByteTimeDomainData(dataArray);
-
-				let sum = 0;
-				for (const data of dataArray) {
-					const normalized = (data - 128) / 128;
-					sum += normalized * normalized;
-				}
-
-				const rms = Math.sqrt(sum / dataArray.length);
-
-				const lastVolume = this.volume;
-				this.volume = normalize_rms(rms);
-
-				if (this.volume !== lastVolume) {
-					this.emit('volumeChange', this.volume, lastVolume);
-					this.#ctx.call.participants.joined.emit(
-						'volumeChange',
-						this,
-						lastVolume,
-					);
-				}
-			}, 500);
-		}
-	}
-
-	#stopVolumeMeasurement() {
-		this.#ctx.logger.debug('📏 ending participant volume estimation');
-		clearInterval(this.#volumeInterval);
-		const lastVolume = this.volume;
-		this.volume = -Infinity;
-		this.#ctx.call.participants.joined.emit('volumeChange', this, lastVolume);
 	}
 
 	get micEnabled() {

@@ -12,10 +12,7 @@ export type CallContext = {
 	call: CallClient;
 	logger: Logger;
 	cameraRid$: BehaviorSubject<CameraRID>;
-	volumeContext: AudioContext;
-	maxOnStageParticipants: number;
 	cameraEncodings$: BehaviorSubject<RTCRtpEncodingParameters[]>;
-
 	onError?: (error: Error) => void;
 };
 
@@ -32,6 +29,6 @@ export function runWithContext<T>(context: CallContext, fn: () => T): T {
 
 export function getCurrentCallContext(): CallContext {
 	const ctx = contextStack[contextStack.length - 1];
-	if (!ctx) invariant(ctx, 'No active CallContext');
+	invariant(ctx, 'No active CallContext');
 	return ctx;
 }
