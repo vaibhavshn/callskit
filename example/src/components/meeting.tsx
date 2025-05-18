@@ -7,12 +7,14 @@ import {
 	CameraToggle,
 	ChatToggle,
 	CameraQualitySelector,
+	SettingsToggle,
 } from './toggles';
 import { ParticipantCount } from './participant-count';
 import { useEffect, useRef } from 'react';
 import { useCall } from 'callskit/react';
 import { Button } from './primitives/button';
 import { PlayRegular } from '@fluentui/react-icons';
+import { Settings } from './settings/settings';
 
 export function Meeting() {
 	const call = useCall();
@@ -89,6 +91,7 @@ export function Meeting() {
 				<div className="flex h-full items-center justify-center gap-2">
 					<MicToggle />
 					<CameraToggle />
+					<SettingsToggle />
 				</div>
 				<div className="flex h-full items-center justify-end">
 					<ChatToggle />
@@ -97,6 +100,7 @@ export function Meeting() {
 
 			<audio autoPlay ref={audioRef} />
 
+			<Settings audioRef={audioRef} />
 			<dialog
 				ref={dialogRef}
 				className="m-auto w-full max-w-sm flex-col gap-3 rounded-lg p-4 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex"

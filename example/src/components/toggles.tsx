@@ -3,6 +3,7 @@ import {
 	ChevronDownRegular,
 	MicOffRegular,
 	MicRegular,
+	SettingsRegular,
 	VideoOffRegular,
 	VideoRegular,
 } from '@fluentui/react-icons';
@@ -61,6 +62,20 @@ export function ChatToggle(props: ButtonProps) {
 			{...props}
 		>
 			<ChatRegular />
+		</ControlbarButton>
+	);
+}
+
+export function SettingsToggle() {
+	const store = useMeetingStore();
+
+	console.log(store);
+
+	return (
+		<ControlbarButton
+			onClick={() => store.setSettingsOpen(!store.settingsOpen)}
+		>
+			<SettingsRegular />
 		</ControlbarButton>
 	);
 }

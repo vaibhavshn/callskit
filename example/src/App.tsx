@@ -25,7 +25,7 @@ function App() {
 			displayName: 'User ' + Math.random().toString(36).substring(7),
 			logLevel: 'debug',
 			config: { maxOnStageParticipants: 9, preferredCameraQuality: 'a' },
-			// autoJoin: true,
+			autoJoin: window.location.hash === '#join',
 			// defaults: { audio: true, video: true },
 		});
 	}, [createCall]);

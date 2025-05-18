@@ -1,5 +1,10 @@
-import { getCamera, getMic, type MediaDevice } from 'partytracks/client';
-import { BehaviorSubject, of } from 'rxjs';
+import {
+	devices$,
+	getCamera,
+	getMic,
+	type MediaDevice,
+} from 'partytracks/client';
+import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import { type CallClientOptions } from '../call-client/call-client';
@@ -144,6 +149,29 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		this.#camera.stopBroadcasting();
 	}
 
+	#cameraDevice: MediaDeviceInfo | undefined;
+	#micDevice: MediaDeviceInfo | undefined;
+
+	async setCameraDevice(deviceId: string) {
+		const devices = await this.devices;
+		const device = devices.find((d) => d.deviceId === deviceId);
+		if (!device) {
+			throw new Error(`Device not found: ${deviceId}`);
+		}
+		this.#cameraDevice = device;
+		this.#camera.setPreferredDevice(device);
+	}
+
+	async setMicDevice(deviceId: string) {
+		const devices = await this.devices;
+		const device = devices.find((d) => d.deviceId === deviceId);
+		if (!device) {
+			throw new Error(`Device not found: ${deviceId}`);
+		}
+		this.#micDevice = device;
+		this.#mic.setPreferredDevice(device);
+	}
+
 	get micEnabled(): boolean {
 		return (this.#mic.isBroadcasting$ as BehaviorSubject<boolean>).value;
 	}
@@ -158,6 +186,17 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	get cameraTrack(): MediaStreamTrack | undefined {
 		return this.#cameraTrack;
+	}
+
+	get devices(): Promise<MediaDeviceInfo[]> {
+		return firstValueFrom(devices$);
+	}
+
+	get currentDevices() {
+		return {
+			mic: this.#micDevice,
+			camera: this.#cameraDevice,
+		};
 	}
 
 	setName(name: string) {
