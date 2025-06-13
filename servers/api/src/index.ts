@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-// import { routePartyTracksRequest } from './route';
 import { cors } from 'hono/cors';
 import { routePartyTracksRequest } from 'partytracks/server';
 

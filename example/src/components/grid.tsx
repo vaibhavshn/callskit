@@ -41,8 +41,6 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 			: undefined,
 	});
 
-	console.log({ screenshares, hasMainView });
-
 	return (
 		<AnimatePresence>
 			{grid.mainViewLayout && screenshares[0] && (

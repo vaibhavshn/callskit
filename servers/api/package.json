@@ -11,8 +11,6 @@
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250610.0",
 		"@types/node": "^24.0.0",
-		"cookie": "^1.0.2",
-		"jose": "^6.0.11",
 		"wrangler": "^4.19.1"
 	}
 }

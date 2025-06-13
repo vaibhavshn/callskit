@@ -157,7 +157,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		);
 
 		screenshareVideoMetadata$.subscribe((metadata) => {
-			console.log('video metadata', metadata);
 			this.#screenshareVideoTrackId = `${metadata.sessionId}/${metadata.trackName}`;
 			this.#ctx.socket.sendAction({
 				action: 'self/screenshare-update',
