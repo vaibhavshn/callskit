@@ -4,6 +4,8 @@ import {
 	MicOffRegular,
 	MicRegular,
 	SettingsRegular,
+	ShareScreenStartRegular,
+	ShareScreenStopRegular,
 	VideoOffRegular,
 	VideoRegular,
 } from '@fluentui/react-icons';
@@ -48,6 +50,30 @@ export function CameraToggle() {
 	);
 }
 
+export function ScreenshareToggle() {
+	const call = useCall();
+	const screenshareEnabled = useCallSelector(
+		(call) => call.self.screenshareEnabled,
+	);
+	const toggleScreenshare = useCallback(() => {
+		if (call.self.screenshareEnabled) {
+			call.self.stopScreenshare();
+		} else {
+			call.self.startScreenshare();
+		}
+	}, [call.self]);
+
+	return (
+		<ControlbarButton onClick={toggleScreenshare}>
+			{screenshareEnabled ? (
+				<ShareScreenStopRegular />
+			) : (
+				<ShareScreenStartRegular />
+			)}
+		</ControlbarButton>
+	);
+}
+
 export function ChatToggle(props: ButtonProps) {
 	const store = useMeetingStore();
 
@@ -68,8 +94,6 @@ export function ChatToggle(props: ButtonProps) {
 
 export function SettingsToggle() {
 	const store = useMeetingStore();
-
-	console.log(store);
 
 	return (
 		<ControlbarButton

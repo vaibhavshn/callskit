@@ -17,6 +17,10 @@ export interface SerializedUser {
 
 	cameraEnabled: boolean;
 	cameraTrackId?: string;
+
+	screenshareEnabled: boolean;
+	screenshareVideoTrackId?: string;
+	screenshareAudioTrackId?: string;
 }
 
 export type { CallEvent } from './call-events';

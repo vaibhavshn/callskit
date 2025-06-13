@@ -19,6 +19,15 @@ export type ParticipantMediaEvents = {
 					cameraEnabled: false;
 			  },
 	) => void;
+	screenshareUpdate: (
+		data:
+			| {
+					screenshareEnabled: true;
+					screenshareVideoTrack: MediaStreamTrack;
+					screenshareAudioTrack?: MediaStreamTrack;
+			  }
+			| { screenshareEnabled: false },
+	) => void;
 	volumeChange: (volume: number, lastVolume: number) => void;
 	nameChange: (name: string, oldName: string) => void;
 };

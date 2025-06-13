@@ -16,7 +16,7 @@ export function ParticipantTile({
 	const $video = useRef<HTMLVideoElement>(null);
 
 	useEffect(() => {
-		console.log(participant.cameraTrack, participant.cameraEnabled);
+		// console.log(participant.cameraTrack, participant.cameraEnabled);
 		if (participant.cameraEnabled && participant.cameraTrack) {
 			$video.current!.srcObject = new MediaStream([participant.cameraTrack]);
 			$video.current!.play();

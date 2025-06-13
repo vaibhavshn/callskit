@@ -8,6 +8,7 @@ import {
 	ChatToggle,
 	CameraQualitySelector,
 	SettingsToggle,
+	ScreenshareToggle,
 } from './toggles';
 import { ParticipantCount } from './participant-count';
 import { useEffect, useRef } from 'react';
@@ -46,7 +47,6 @@ export function Meeting() {
 		Object.assign(window, { audio });
 
 		return call.participants.joined.subscribe('micUpdate', (participant) => {
-			console.log('playAudio', participant.micEnabled, participant.micTrack);
 			if (participant.micEnabled && participant.micTrack) {
 				stream.addTrack(participant.micTrack);
 				trackMap.set(participant.id, participant.micTrack);
@@ -92,6 +92,7 @@ export function Meeting() {
 					<MicToggle />
 					<CameraToggle />
 					<SettingsToggle />
+					<ScreenshareToggle />
 				</div>
 				<div className="flex h-full items-center justify-end">
 					<ChatToggle />

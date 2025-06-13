@@ -35,11 +35,11 @@
 	"scripts": {
 		"build": "NODE_ENV=production tsup",
 		"build:watch": "tsup --watch --sourcemap",
-		"dev": "vite dev"
+		"dev": "tsup --watch --sourcemap"
 	},
 	"dependencies": {
 		"partysocket": "^1.1.4",
-		"partytracks": "^0.0.41",
+		"partytracks": "^0.0.49",
 		"rxjs": "^7.8.2",
 		"tiny-invariant": "^1.3.3"
 	},

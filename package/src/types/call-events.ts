@@ -30,6 +30,15 @@ export type ParticipantEvent =
 				micTrackId?: string;
 				participantId: string;
 			};
+	  }
+	| {
+			event: 'participant/screenshare-update';
+			data: {
+				screenshareEnabled: boolean;
+				screenshareVideoTrackId?: string;
+				screenshareAudioTrackId?: string;
+				participantId: string;
+			};
 	  };
 
 export type ChatEvent = { event: 'chat/new-message'; message: ChatMessage };

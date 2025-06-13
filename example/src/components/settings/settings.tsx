@@ -26,8 +26,6 @@ export function Settings({
 		}
 	}, [store.settingsOpen]);
 
-	console.log({ devices });
-
 	const mics = devices.filter((device) => device.kind === 'audioinput');
 	const cameras = devices.filter((device) => device.kind === 'videoinput');
 	const speakers = devices.filter((device) => device.kind === 'audiooutput');

@@ -2,7 +2,9 @@ import {
 	devices$,
 	getCamera,
 	getMic,
+	getScreenshare,
 	type MediaDevice,
+	type Screenshare,
 } from 'partytracks/client';
 import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
@@ -30,12 +32,18 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	#mic: MediaDevice;
 	#camera: MediaDevice;
+	#screenshare: Screenshare;
 
 	#micTrackId: string | undefined;
 	#micTrack: MediaStreamTrack | undefined;
 
 	#cameraTrackId: string | undefined;
 	#cameraTrack: MediaStreamTrack | undefined;
+
+	#screenshareVideoTrackId: string | undefined;
+	#screenshareVideoTrack: MediaStreamTrack | undefined;
+	#screenshareAudioTrackId: string | undefined;
+	#screenshareAudioTrack: MediaStreamTrack | undefined;
 
 	constructor(options: CallSelfOptions) {
 		super();
@@ -44,6 +52,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 		this.#mic = getMic();
 		this.#camera = getCamera();
+		this.#screenshare = getScreenshare();
 
 		if (options.defaults?.audio) {
 			this.startMic();
@@ -131,6 +140,61 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				this.emit('cameraUpdate', { cameraEnabled: false });
 			}
 		});
+
+		this.#screenshare.video.broadcastTrack$.subscribe((track) => {
+			this.#screenshareVideoTrack = track;
+		});
+
+		this.#screenshare.audio.broadcastTrack$.subscribe((track) => {
+			this.#screenshareAudioTrack = track;
+		});
+
+		const screenshareVideoMetadata$ = this.#ctx.partyTracks.push(
+			this.#screenshare.video.broadcastTrack$,
+		);
+		const screenshareAudioMetadata$ = this.#ctx.partyTracks.push(
+			this.#screenshare.audio.broadcastTrack$,
+		);
+
+		screenshareVideoMetadata$.subscribe((metadata) => {
+			console.log('video metadata', metadata);
+			this.#screenshareVideoTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+			this.#ctx.socket.sendAction({
+				action: 'self/screenshare-update',
+				updates: {
+					screenshareEnabled: this.screenshareEnabled,
+					screenshareVideoTrackId: this.#screenshareVideoTrackId,
+					screenshareAudioTrackId: this.#screenshareAudioTrackId,
+				},
+			});
+			if (this.#screenshareVideoTrack) {
+				this.emit('screenshareUpdate', {
+					screenshareEnabled: this.screenshareEnabled,
+					screenshareVideoTrack: this.#screenshareVideoTrack,
+					screenshareAudioTrack: this.#screenshareAudioTrack,
+				});
+			}
+		});
+
+		screenshareAudioMetadata$.subscribe((metadata) => {
+			console.log('audio metadata', metadata);
+			this.#screenshareAudioTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+			this.#ctx.socket.sendAction({
+				action: 'self/screenshare-update',
+				updates: {
+					screenshareEnabled: this.screenshareEnabled,
+					screenshareVideoTrackId: this.#screenshareVideoTrackId,
+					screenshareAudioTrackId: this.#screenshareAudioTrackId,
+				},
+			});
+			if (this.#screenshareVideoTrack) {
+				this.emit('screenshareUpdate', {
+					screenshareEnabled: this.screenshareEnabled,
+					screenshareVideoTrack: this.#screenshareVideoTrack,
+					screenshareAudioTrack: this.#screenshareAudioTrack,
+				});
+			}
+		});
 	}
 
 	startMic() {
@@ -147,6 +211,14 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 	stopCamera() {
 		this.#camera.stopBroadcasting();
+	}
+
+	startScreenshare() {
+		return this.#screenshare.video.startBroadcasting();
+	}
+
+	stopScreenshare() {
+		return this.#screenshare.video.stopBroadcasting();
 	}
 
 	#cameraDevice: MediaDeviceInfo | undefined;
@@ -188,6 +260,27 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		return this.#cameraTrack;
 	}
 
+	get screenshareEnabled(): boolean {
+		return (
+			this.#screenshare.video.isBroadcasting$.source as BehaviorSubject<boolean>
+		).value;
+	}
+
+	get screenshareTracks():
+		| {
+				video: MediaStreamTrack | undefined;
+				audio: MediaStreamTrack | undefined;
+		  }
+		| undefined {
+		if (!this.screenshareEnabled) {
+			return undefined;
+		}
+		return {
+			video: this.#screenshareVideoTrack,
+			audio: this.#screenshareAudioTrack,
+		};
+	}
+
 	get devices(): Promise<MediaDeviceInfo[]> {
 		return firstValueFrom(devices$);
 	}
@@ -213,6 +306,9 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			micTrackId: this.#micTrackId,
 			cameraEnabled: this.cameraEnabled,
 			cameraTrackId: this.#cameraTrackId,
+			screenshareEnabled: this.screenshareEnabled,
+			screenshareVideoTrackId: this.#screenshareVideoTrackId,
+			screenshareAudioTrackId: this.#screenshareAudioTrackId,
 		};
 	}
 }

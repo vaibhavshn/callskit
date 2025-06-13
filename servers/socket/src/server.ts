@@ -132,6 +132,28 @@ export default class Server implements Party.Server {
 				break;
 			}
 
+			case 'self/screenshare-update': {
+				const {
+					screenshareEnabled,
+					screenshareVideoTrackId,
+					screenshareAudioTrackId,
+				} = payload.updates;
+				const user = this.getUser(sender.id);
+				if (user) {
+					user.screenshareEnabled = screenshareEnabled;
+					user.screenshareVideoTrackId = screenshareVideoTrackId;
+					user.screenshareAudioTrackId = screenshareAudioTrackId;
+					this.room.broadcast(
+						createEvent({
+							event: 'participant/screenshare-update',
+							data: { ...payload.updates, participantId: user.id },
+						}),
+						[sender.id],
+					);
+				}
+				break;
+			}
+
 			case 'chat/message': {
 				const user = this.getUser(sender.id);
 				if (user) {

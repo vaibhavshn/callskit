@@ -10,6 +10,7 @@ export type ParticipantControllerEvents = {
 	// emitted from CallParticipant
 	micUpdate: (participant: CallParticipant) => void;
 	cameraUpdate: (participant: CallParticipant) => void;
+	screenshareUpdate: (participant: CallParticipant) => void;
 };
 
 export class ParticipantsController extends EventsHandler<ParticipantControllerEvents> {

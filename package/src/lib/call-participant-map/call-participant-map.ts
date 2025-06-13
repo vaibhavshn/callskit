@@ -10,7 +10,8 @@ export type ParticipantMapEvents = {
 	// emitted from CallParticipant
 	micUpdate: (participant: CallParticipant) => void;
 	cameraUpdate: (participant: CallParticipant) => void;
-	volumeChange: (participant: CallParticipant, lastVolume: number) => void;
+	screenshareUpdate: (participant: CallParticipant) => void;
+	// volumeChange: (participant: CallParticipant, lastVolume: number) => void;
 };
 
 export class CallParticipantMap

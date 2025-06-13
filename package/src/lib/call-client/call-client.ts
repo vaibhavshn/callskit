@@ -101,10 +101,14 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			onError: options.onError,
 		};
 
-		this.self = runWithContext(this.#ctx, () =>
-			new CallSelf({ name: options.displayName, defaults: options.defaults }),
+		this.self = runWithContext(
+			this.#ctx,
+			() =>
+				new CallSelf({ name: options.displayName, defaults: options.defaults }),
 		);
-		this.participants = runWithContext(this.#ctx, () => new ParticipantsController(),
+		this.participants = runWithContext(
+			this.#ctx,
+			() => new ParticipantsController(),
 		);
 		this.chat = runWithContext(this.#ctx, () => new CallChat());
 	}
@@ -186,6 +190,13 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 				const { participantId, ...updates } = ev.data;
 				const participant = this.participants.joined.get(participantId);
 				participant?.updateCameraState(updates);
+				break;
+			}
+
+			case 'participant/screenshare-update': {
+				const { participantId, ...updates } = ev.data;
+				const participant = this.participants.joined.get(participantId);
+				participant?.updateScreenshareState(updates);
 				break;
 			}
 

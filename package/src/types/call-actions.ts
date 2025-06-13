@@ -1,6 +1,4 @@
-import type {
-	ChatMessagePayload,
-} from '../lib/call-chat/call-chat';
+import type { ChatMessagePayload } from '../lib/call-chat/call-chat';
 import type { SerializedUser } from './call-socket';
 
 export type MediaAction =
@@ -15,8 +13,9 @@ export type MediaAction =
 	| {
 			action: 'self/screenshare-update';
 			updates: {
-				screenShareEnabled: boolean;
-				screenShareTrackIds?: { video: string; audio?: string };
+				screenshareEnabled: boolean;
+				screenshareVideoTrackId?: string;
+				screenshareAudioTrackId?: string;
 			};
 	  };
 

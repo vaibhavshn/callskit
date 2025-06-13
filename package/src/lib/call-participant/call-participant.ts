@@ -37,6 +37,16 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 	#cameraEnabled: boolean = false;
 	#cameraTrack: MediaStreamTrack | undefined;
 
+	#screenshareEnabled$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+	#screenshareVideoTrackId$: BehaviorSubject<string | undefined> =
+		new BehaviorSubject<string | undefined>(undefined);
+	#screenshareAudioTrackId$: BehaviorSubject<string | undefined> =
+		new BehaviorSubject<string | undefined>(undefined);
+
+	#screenshareEnabled: boolean = false;
+	#screenshareVideoTrack: MediaStreamTrack | undefined;
+	#screenshareAudioTrack: MediaStreamTrack | undefined;
+
 	constructor(options: CallParticipantOptions) {
 		super();
 		this.id = options.id;
@@ -139,6 +149,60 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#ctx.call.participants.emit('cameraUpdate', this);
 			this.#ctx.call.participants.joined.emit('cameraUpdate', this);
 		});
+
+		const screenshareVideoMetadata$ = this.#screenshareVideoTrackId$.pipe(
+			filter((id) => typeof id === 'string'),
+			switchMap((id) => {
+				const [sessionId, trackName] = id.split('/');
+				return of({
+					sessionId,
+					trackName,
+					location: 'remote',
+				} satisfies TrackMetadata);
+			}),
+		);
+
+		const screenshareVideoTrack$ = this.#ctx.partyTracks.pull(
+			screenshareVideoMetadata$,
+		);
+
+		screenshareVideoTrack$.subscribe((track) => {
+			this.#screenshareVideoTrack = track;
+			this.emit('screenshareUpdate', {
+				screenshareEnabled: true,
+				screenshareVideoTrack: track,
+				screenshareAudioTrack: this.#screenshareAudioTrack,
+			});
+			this.#ctx.call.participants.emit('screenshareUpdate', this);
+			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);
+		});
+
+		const screenshareAudioMetadata$ = this.#screenshareAudioTrackId$.pipe(
+			filter((id) => typeof id === 'string'),
+			switchMap((id) => {
+				const [sessionId, trackName] = id.split('/');
+				return of({
+					sessionId,
+					trackName,
+					location: 'remote',
+				} satisfies TrackMetadata);
+			}),
+		);
+
+		const screenshareAudioTrack$ = this.#ctx.partyTracks.pull(
+			screenshareAudioMetadata$,
+		);
+
+		screenshareAudioTrack$.subscribe((track) => {
+			this.#screenshareAudioTrack = track;
+			this.emit('screenshareUpdate', {
+				screenshareEnabled: true,
+				screenshareVideoTrack: this.#screenshareVideoTrack!,
+				screenshareAudioTrack: track,
+			});
+			this.#ctx.call.participants.emit('screenshareUpdate', this);
+			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);
+		});
 	}
 
 	updateMicState(updates: { micEnabled: boolean; micTrackId?: string }) {
@@ -164,6 +228,28 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		}
 	}
 
+	updateScreenshareState(updates: {
+		screenshareEnabled: boolean;
+		screenshareVideoTrackId?: string;
+		screenshareAudioTrackId?: string;
+	}) {
+		this.#ctx.logger.debug('🖥️ participant screenshare state updated', updates);
+		if (updates.screenshareEnabled && updates.screenshareVideoTrackId) {
+			this.#screenshareVideoTrackId$.next(updates.screenshareVideoTrackId);
+			this.#screenshareAudioTrackId$.next(updates.screenshareAudioTrackId);
+			this.#screenshareEnabled$.next(true);
+			this.#screenshareEnabled = true;
+		} else {
+			this.#screenshareEnabled$.next(false);
+			this.#screenshareVideoTrackId$.next(undefined);
+			this.#screenshareAudioTrackId$.next(undefined);
+			this.#screenshareEnabled = false;
+			this.emit('screenshareUpdate', { screenshareEnabled: false });
+			this.#ctx.call.participants.emit('screenshareUpdate', this);
+			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);
+		}
+	}
+
 	get micEnabled() {
 		return this.#micEnabled;
 	}
@@ -178,6 +264,21 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 
 	get cameraTrack() {
 		return this.#cameraEnabled ? this.#cameraTrack : undefined;
+	}
+
+	get screenshareEnabled() {
+		return this.#screenshareEnabled;
+	}
+
+	get screenshareTracks() {
+		if (!this.screenshareEnabled) {
+			return undefined;
+		}
+
+		return {
+			video: this.#screenshareVideoTrack!,
+			audio: this.#screenshareAudioTrack,
+		};
 	}
 
 	static fromJSON(obj: SerializedUser): CallParticipant {
