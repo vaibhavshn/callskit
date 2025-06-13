@@ -68,10 +68,15 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			] satisfies RTCRtpEncodingParameters[]),
 		});
 
+		this.#mic.broadcastTrack$.subscribe((track) => {
+			this.#micTrack = track;
+		});
+
 		micMetadata$.subscribe((metadata) => {
-			const micEnabled = (this.#mic.isBroadcasting$ as BehaviorSubject<boolean>)
-				.value;
+			const micEnabled = this.micEnabled;
 			const micTrack = this.#micTrack;
+
+			console.log({ micEnabled, micTrack });
 
 			if (micEnabled && micTrack) {
 				const micTrackId = `${metadata.sessionId}/${metadata.trackName}`;
@@ -103,18 +108,12 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			},
 		);
 
-		this.#mic.broadcastTrack$.subscribe((track) => {
-			this.#micTrack = track;
-		});
-
 		this.#camera.broadcastTrack$.subscribe((track) => {
 			this.#cameraTrack = track;
 		});
 
 		cameraMetadata$.subscribe((metadata) => {
-			const cameraEnabled = (
-				this.#camera.isBroadcasting$ as BehaviorSubject<boolean>
-			).value;
+			const cameraEnabled = this.cameraEnabled;
 			const cameraTrack = this.#cameraTrack;
 
 			if (cameraEnabled && cameraTrack) {
@@ -244,7 +243,8 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	get micEnabled(): boolean {
-		return (this.#mic.isBroadcasting$ as BehaviorSubject<boolean>).value;
+		console.log(this.#mic);
+		return (this.#mic.isBroadcasting$.source as BehaviorSubject<boolean>).value;
 	}
 
 	get micTrack(): MediaStreamTrack | undefined {
@@ -252,7 +252,8 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	get cameraEnabled(): boolean {
-		return (this.#camera.isBroadcasting$ as BehaviorSubject<boolean>).value;
+		return (this.#camera.isBroadcasting$.source as BehaviorSubject<boolean>)
+			.value;
 	}
 
 	get cameraTrack(): MediaStreamTrack | undefined {
