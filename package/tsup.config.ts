@@ -25,4 +25,13 @@ export default defineConfig([
 		env: env,
 		external: ['react', 'partysocket', 'partytracks', 'rxjs'],
 	},
+	{
+		entry: {
+			server: 'src/server/index.ts',
+		},
+		format: 'esm',
+		dts: true,
+		clean: true,
+		external: ['partykit'],
+	},
 ]);

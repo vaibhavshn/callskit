@@ -1,4 +1,4 @@
-import type { CallAction, CallEvent } from 'callskit';
+import type { CallAction, CallEvent } from '..';
 
 export function createEvent(event: CallEvent) {
 	return JSON.stringify(event);
