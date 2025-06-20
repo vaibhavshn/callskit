@@ -52,7 +52,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 		this.#mic = getMic();
 		this.#camera = getCamera();
-		this.#screenshare = getScreenshare();
+		this.#screenshare = getScreenshare({ audio: true });
 
 		if (options.defaults?.audio) {
 			this.startMic();
@@ -221,13 +221,11 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	startScreenshare() {
-		this.#screenshare.video.startBroadcasting();
-		this.#screenshare.audio.startBroadcasting();
+		this.#screenshare.startBroadcasting();
 	}
 
 	stopScreenshare() {
-		this.#screenshare.video.stopBroadcasting();
-		this.#screenshare.audio.stopBroadcasting();
+		this.#screenshare.stopBroadcasting();
 	}
 
 	#cameraDevice: MediaDeviceInfo | undefined;
