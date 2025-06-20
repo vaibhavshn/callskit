@@ -1,37 +1,63 @@
 # CallsKit
 
-CallsKit is an easy to use realtime audio video sdk built on top of Cloudflare Realtime.
+A client SDK for handling calls using [Cloudflare Realtime](https://developers.cloudflare.com/realtime/).
 
-## Contributing
+CallsKit provides vanilla JS APIs as well as React hooks that makes development with the core APIs easier in React.
 
-Run `npm install` in the root first.
+See [contributing guide](./CONTRIBUTING.md) for development setup.
 
-To start developing, add the following env vars from the Cloudflare dashboard to `api/.dev.vars`:
+## Usage
 
-```sh
-REALTIME_APP_ID=
-REALTIME_APP_TOKEN=
+### Core API Usage (JS)
 
-TURN_TOKEN_ID=
-TURN_API_TOKEN=
+```js
+const call = await createCall({ room: 'abc-xyz' });
+
+// then access APIs like so
+call.started_at;
+call.room;
+call.self;
+call.self.name;
+call.participants.joined.toArray();
+call.participants.joined.toArray()[0].name;
+call.chat;
 ```
 
-Now just run the following commands in two terminals.
+### React Hooks
 
-First run:
+You set up the provider like so:
 
-```sh
-npm run dev:servers
+```tsx
+import { useCreateCall, CallProvider } from 'callskit/react';
+
+function App() {
+	const [call, createCall] = useCreateCall();
+
+	useEffect(() => {
+		createCall({ room: 'abc-xyz' });
+	}, []);
+
+	return (
+		<CallProvider call={call} fallback={<div>Loading...</div>}>
+			<MyCallApp />
+		</CallProvider>
+	);
+}
 ```
 
-This will start both the API and Socket server.
+Then your app can use the hooks:
 
-Then run:
+```tsx
+import { useCall, useCallSelector } from 'callskit/react';
 
-```sh
-npm run dev:web
+function MyCallApp() {
+	const call = useCall();
+	const participants = useCallSelector(
+		(call) => call.participants.joined,
+	).toArray();
+
+	const chatMessages = useCallSelector((call) => call.chat.messages);
+
+	// ...
+}
 ```
-
-This will start development build for callskit and start the example as well.
-
-Now you can visit http://localhost:5173 to view the example.
