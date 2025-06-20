@@ -2,13 +2,14 @@ import { SpinnerIosRegular } from '@fluentui/react-icons';
 import { type CallSelf, type CallParticipant } from 'callskit';
 import { useCall } from 'callskit/react';
 import clsx from 'clsx';
-import React, { useEffect, useRef } from 'react';
+import { HTMLMotionProps, motion } from 'motion/react';
+import { useEffect, useRef } from 'react';
 
 export function ParticipantTile({
 	className,
 	participant,
 	...props
-}: React.ComponentProps<'div'> & {
+}: HTMLMotionProps<'div'> & {
 	participant: CallParticipant | CallSelf;
 }) {
 	const call = useCall();
@@ -25,8 +26,9 @@ export function ParticipantTile({
 	}, [participant.cameraTrack, participant.cameraEnabled]);
 
 	return (
-		<div
-			key={participant.id}
+		<motion.div
+			layoutId={participant.id}
+			data-id={participant.id}
 			className={clsx(
 				'@container relative aspect-video overflow-hidden rounded-xl border border-zinc-300',
 				className,
@@ -73,7 +75,7 @@ export function ParticipantTile({
 					style={{ animation: 'spin 0.5s linear infinite' }}
 				/>
 			</div>
-		</div>
+		</motion.div>
 	);
 }
 

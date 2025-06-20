@@ -1,13 +1,14 @@
 import type { CallParticipant, CallSelf } from 'callskit';
 import { useCall } from 'callskit/react';
 import clsx from 'clsx';
+import { HTMLMotionProps, motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 
 export function ScreenshareTile({
 	participant,
 	className,
 	...props
-}: React.ComponentProps<'div'> & {
+}: HTMLMotionProps<'div'> & {
 	participant: CallParticipant | CallSelf;
 }) {
 	const call = useCall();
@@ -27,8 +28,12 @@ export function ScreenshareTile({
 		}
 	}, [participant.screenshareEnabled, participant.screenshareTracks]);
 
+	const id = `screenshare-${participant.id}`;
+
 	return (
-		<div
+		<motion.div
+			layoutId={id}
+			data-id={id}
 			className={clsx(
 				'@container relative aspect-video overflow-hidden rounded-xl border border-zinc-300',
 				className,
@@ -51,6 +56,6 @@ export function ScreenshareTile({
 					{isSelf && <span className="text-xs text-zinc-500">(you)</span>}
 				</span>
 			</div>
-		</div>
+		</motion.div>
 	);
 }

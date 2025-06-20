@@ -21,9 +21,16 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 		return allParticipants.filter((p) => p.screenshareEnabled);
 	}, [allParticipants]);
 
+	const [activeScreenshare, setActiveScreenshare] = useState(
+		() => screenshares[0],
+	);
+
 	const excessScreenshares = useMemo(
-		() => Math.max(0, screenshares.length - 1),
-		[screenshares.length],
+		() =>
+			activeScreenshare
+				? screenshares.filter((s) => s.id !== activeScreenshare.id)
+				: screenshares,
+		[activeScreenshare, screenshares],
 	);
 
 	const hasMainView = useMemo(
@@ -35,16 +42,12 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 		return dimensions.width < dimensions.height;
 	}, [dimensions.width, dimensions.height]);
 
-	const [activeScreenshare, setActiveScreenshare] = useState(
-		() => screenshares[0],
-	);
-
 	const aspectRatio = useMemo(() => (isMobile ? 4 / 3 : 16 / 10), [isMobile]);
 
 	const grid = useGridLayout({
 		aspectRatio,
 		gap: 8,
-		count: allParticipants.length + excessScreenshares,
+		count: allParticipants.length + excessScreenshares.length,
 		dimensions: dimensions,
 		isVertical: isMobile,
 		mainView: hasMainView
@@ -69,18 +72,20 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 		}
 	}, [screenshares, activeScreenshare]);
 
+	console.log({ activeScreenshare, excessScreenshares, screenshares });
+
 	return (
 		<AnimatePresence>
-			{grid.mainViewLayout && screenshares[0] && (
+			{grid.mainViewLayout && activeScreenshare && (
 				<ScreenshareTile
-					participant={screenshares[0]}
-					style={{
-						position: 'absolute',
+					key={`screenshare-${activeScreenshare.id}`}
+					participant={activeScreenshare}
+					className="!absolute"
+					animate={{
 						top: grid.mainViewLayout.top,
 						left: grid.mainViewLayout.left,
 						width: grid.mainViewLayout.width,
 						height: grid.mainViewLayout.height,
-						transition: 'all 0.3s',
 					}}
 				/>
 			)}
@@ -92,37 +97,24 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 					<ParticipantTile
 						participant={participant}
 						key={participant.id}
-						style={{
-							position: 'absolute',
-							top,
-							left,
-							width,
-							height,
-							transition: 'all 0.3s',
-						}}
+						className="!absolute"
+						animate={{ top, left, width, height }}
 					/>
 				);
 			})}
 
-			{excessScreenshares > 0 &&
-				screenshares.map((participant, index) => {
+			{excessScreenshares.length > 0 &&
+				excessScreenshares.map((participant, index) => {
 					const { top, left, width, height } = grid.positionFor(
-						allParticipants.length - 1 + index,
+						allParticipants.length + index,
 					);
 
 					return (
 						<ScreenshareTile
 							participant={participant}
 							key={`screenshare-${participant.id}`}
-							className="cursor-pointer"
-							style={{
-								position: 'absolute',
-								top,
-								left,
-								width,
-								height,
-								transition: 'all 0.3s',
-							}}
+							className="!absolute cursor-pointer"
+							animate={{ top, left, width, height }}
 							onClick={() => {
 								setActiveScreenshare(participant);
 							}}
