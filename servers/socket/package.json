@@ -10,6 +10,6 @@
 		"callskit": "*"
 	},
 	"devDependencies": {
-		"partykit": "^0.0.114"
+		"partykit": "^0.0.115"
 	}
 }

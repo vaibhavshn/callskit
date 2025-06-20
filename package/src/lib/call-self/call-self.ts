@@ -76,8 +76,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			const micEnabled = this.micEnabled;
 			const micTrack = this.#micTrack;
 
-			console.log({ micEnabled, micTrack });
-
 			if (micEnabled && micTrack) {
 				const micTrackId = `${metadata.sessionId}/${metadata.trackName}`;
 				this.#micTrackId = micTrackId;
@@ -256,7 +254,6 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	get micEnabled(): boolean {
-		console.log(this.#mic);
 		return (this.#mic.isBroadcasting$.source as BehaviorSubject<boolean>).value;
 	}
 

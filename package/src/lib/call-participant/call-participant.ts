@@ -163,7 +163,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			filter((id) => typeof id === 'string'),
 			switchMap((id) => {
 				const [sessionId, trackName] = id.split('/');
-				console.log({ sessionId, trackName });
 				return of({
 					sessionId,
 					trackName,
@@ -177,7 +176,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		);
 
 		screenshareVideoTrack$.subscribe((track) => {
-			console.log('received track', track);
 			this.#screenshareVideoTrack = track;
 			this.emit('screenshareUpdate', {
 				screenshareEnabled: true,
