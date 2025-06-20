@@ -138,6 +138,7 @@ export function Meeting() {
 			<audio autoPlay ref={audioRef} />
 
 			<Settings audioRef={audioRef} />
+
 			<dialog
 				ref={dialogRef}
 				className="m-auto w-full max-w-sm flex-col gap-3 rounded-lg p-4 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex"
