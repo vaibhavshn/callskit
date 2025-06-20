@@ -23,7 +23,7 @@ export type ParticipantMediaEvents = {
 		data:
 			| {
 					screenshareEnabled: true;
-					screenshareVideoTrack: MediaStreamTrack;
+					screenshareVideoTrack?: MediaStreamTrack;
 					screenshareAudioTrack?: MediaStreamTrack;
 			  }
 			| { screenshareEnabled: false },

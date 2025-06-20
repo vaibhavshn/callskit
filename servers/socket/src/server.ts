@@ -141,8 +141,12 @@ export default class Server implements Party.Server {
 				const user = this.getUser(sender.id);
 				if (user) {
 					user.screenshareEnabled = screenshareEnabled;
-					user.screenshareVideoTrackId = screenshareVideoTrackId;
-					user.screenshareAudioTrackId = screenshareAudioTrackId;
+					if (screenshareVideoTrackId) {
+						user.screenshareVideoTrackId = screenshareVideoTrackId;
+					}
+					if (screenshareAudioTrackId) {
+						user.screenshareAudioTrackId = screenshareAudioTrackId;
+					}
 					this.room.broadcast(
 						createEvent({
 							event: 'participant/screenshare-update',

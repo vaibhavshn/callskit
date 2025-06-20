@@ -15,8 +15,9 @@ interface CallParticipantOptions extends Partial<SerializedUser> {
 	cameraEnabled?: boolean;
 	cameraTrackId?: string;
 
-	screenShareEnabled?: boolean;
-	screenShareTrackIds?: { video: string; audio: string };
+	screenshareEnabled?: boolean;
+	screenshareVideoTrackId?: string;
+	screenshareAudioTrackId?: string;
 }
 
 export class CallParticipant extends EventsHandler<CallParticipantEvents> {
@@ -38,10 +39,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 	#cameraTrack: MediaStreamTrack | undefined;
 
 	#screenshareEnabled$: BehaviorSubject<boolean> = new BehaviorSubject(false);
-	#screenshareVideoTrackId$: BehaviorSubject<string | undefined> =
-		new BehaviorSubject<string | undefined>(undefined);
-	#screenshareAudioTrackId$: BehaviorSubject<string | undefined> =
-		new BehaviorSubject<string | undefined>(undefined);
+	#screenshareVideoTrackId$: BehaviorSubject<string | undefined>;
+	#screenshareAudioTrackId$: BehaviorSubject<string | undefined>;
 
 	#screenshareEnabled: boolean = false;
 	#screenshareVideoTrack: MediaStreamTrack | undefined;
@@ -59,7 +58,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		);
 
 		this.#micTrackId$ = new BehaviorSubject<string | undefined>(
-			options.micTrackId,
+			options.micEnabled ? options.micTrackId : undefined,
 		);
 
 		this.#cameraEnabled$ = new BehaviorSubject<boolean>(
@@ -67,7 +66,17 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		);
 
 		this.#cameraTrackId$ = new BehaviorSubject<string | undefined>(
-			options.cameraTrackId,
+			options.cameraEnabled ? options.cameraTrackId : undefined,
+		);
+
+		this.#screenshareEnabled = options.screenshareEnabled ?? false;
+
+		this.#screenshareVideoTrackId$ = new BehaviorSubject<string | undefined>(
+			options.screenshareEnabled ? options.screenshareVideoTrackId : undefined,
+		);
+
+		this.#screenshareAudioTrackId$ = new BehaviorSubject<string | undefined>(
+			options.screenshareEnabled ? options.screenshareAudioTrackId : undefined,
 		);
 
 		this.#micEnabled$.subscribe((enabled) => {
@@ -154,6 +163,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			filter((id) => typeof id === 'string'),
 			switchMap((id) => {
 				const [sessionId, trackName] = id.split('/');
+				console.log({ sessionId, trackName });
 				return of({
 					sessionId,
 					trackName,
@@ -167,6 +177,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		);
 
 		screenshareVideoTrack$.subscribe((track) => {
+			console.log('received track', track);
 			this.#screenshareVideoTrack = track;
 			this.emit('screenshareUpdate', {
 				screenshareEnabled: true,
@@ -197,7 +208,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#screenshareAudioTrack = track;
 			this.emit('screenshareUpdate', {
 				screenshareEnabled: true,
-				screenshareVideoTrack: this.#screenshareVideoTrack!,
+				screenshareVideoTrack: this.#screenshareVideoTrack,
 				screenshareAudioTrack: track,
 			});
 			this.#ctx.call.participants.emit('screenshareUpdate', this);
@@ -234,9 +245,13 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		screenshareAudioTrackId?: string;
 	}) {
 		this.#ctx.logger.debug('🖥️ participant screenshare state updated', updates);
-		if (updates.screenshareEnabled && updates.screenshareVideoTrackId) {
-			this.#screenshareVideoTrackId$.next(updates.screenshareVideoTrackId);
-			this.#screenshareAudioTrackId$.next(updates.screenshareAudioTrackId);
+		if (updates.screenshareEnabled) {
+			if (updates.screenshareVideoTrackId) {
+				this.#screenshareVideoTrackId$.next(updates.screenshareVideoTrackId);
+			}
+			if (updates.screenshareAudioTrackId) {
+				this.#screenshareAudioTrackId$.next(updates.screenshareAudioTrackId);
+			}
 			this.#screenshareEnabled$.next(true);
 			this.#screenshareEnabled = true;
 		} else {

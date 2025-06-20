@@ -156,39 +156,50 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		);
 
 		screenshareVideoMetadata$.subscribe((metadata) => {
-			this.#screenshareVideoTrackId = `${metadata.sessionId}/${metadata.trackName}`;
-			this.#ctx.socket.sendAction({
-				action: 'self/screenshare-update',
-				updates: {
-					screenshareEnabled: this.screenshareEnabled,
-					screenshareVideoTrackId: this.#screenshareVideoTrackId,
-					screenshareAudioTrackId: this.#screenshareAudioTrackId,
-				},
-			});
-			if (this.#screenshareVideoTrack) {
+			if (!this.screenshareEnabled) {
+				this.#ctx.socket.sendAction({
+					action: 'self/screenshare-update',
+					updates: {
+						screenshareEnabled: false,
+					},
+				});
+				this.emit('screenshareUpdate', { screenshareEnabled: false });
+			} else {
+				this.#screenshareVideoTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#ctx.socket.sendAction({
+					action: 'self/screenshare-update',
+					updates: {
+						screenshareEnabled: true,
+						screenshareVideoTrackId: this.#screenshareVideoTrackId,
+					},
+				});
 				this.emit('screenshareUpdate', {
-					screenshareEnabled: this.screenshareEnabled,
+					screenshareEnabled: true,
 					screenshareVideoTrack: this.#screenshareVideoTrack,
-					screenshareAudioTrack: this.#screenshareAudioTrack,
 				});
 			}
 		});
 
 		screenshareAudioMetadata$.subscribe((metadata) => {
-			console.log('audio metadata', metadata);
-			this.#screenshareAudioTrackId = `${metadata.sessionId}/${metadata.trackName}`;
-			this.#ctx.socket.sendAction({
-				action: 'self/screenshare-update',
-				updates: {
-					screenshareEnabled: this.screenshareEnabled,
-					screenshareVideoTrackId: this.#screenshareVideoTrackId,
-					screenshareAudioTrackId: this.#screenshareAudioTrackId,
-				},
-			});
-			if (this.#screenshareVideoTrack) {
+			if (!this.screenshareEnabled) {
+				this.#ctx.socket.sendAction({
+					action: 'self/screenshare-update',
+					updates: {
+						screenshareEnabled: false,
+					},
+				});
+				this.emit('screenshareUpdate', { screenshareEnabled: false });
+			} else {
+				this.#screenshareAudioTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#ctx.socket.sendAction({
+					action: 'self/screenshare-update',
+					updates: {
+						screenshareEnabled: true,
+						screenshareAudioTrackId: this.#screenshareAudioTrackId,
+					},
+				});
 				this.emit('screenshareUpdate', {
-					screenshareEnabled: this.screenshareEnabled,
-					screenshareVideoTrack: this.#screenshareVideoTrack,
+					screenshareEnabled: true,
 					screenshareAudioTrack: this.#screenshareAudioTrack,
 				});
 			}
@@ -212,11 +223,13 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	}
 
 	startScreenshare() {
-		return this.#screenshare.video.startBroadcasting();
+		this.#screenshare.video.startBroadcasting();
+		this.#screenshare.audio.startBroadcasting();
 	}
 
 	stopScreenshare() {
-		return this.#screenshare.video.stopBroadcasting();
+		this.#screenshare.video.stopBroadcasting();
+		this.#screenshare.audio.stopBroadcasting();
 	}
 
 	#cameraDevice: MediaDeviceInfo | undefined;

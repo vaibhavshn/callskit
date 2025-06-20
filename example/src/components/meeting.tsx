@@ -31,6 +31,10 @@ export function Meeting() {
 				stream.addTrack(p.micTrack);
 				trackMap.set(p.id, p.micTrack);
 			}
+			if (p.screenshareEnabled && p.screenshareTracks?.audio) {
+				stream.addTrack(p.screenshareTracks.audio);
+				trackMap.set('screenshare-' + p.id, p.screenshareTracks.audio);
+			}
 		});
 
 		const audio = audioRef.current!;
@@ -46,19 +50,49 @@ export function Meeting() {
 
 		Object.assign(window, { audio });
 
-		return call.participants.joined.subscribe('micUpdate', (participant) => {
-			if (participant.micEnabled && participant.micTrack) {
-				stream.addTrack(participant.micTrack);
-				trackMap.set(participant.id, participant.micTrack);
-				audio.srcObject = stream;
-			} else {
-				const track = trackMap.get(participant.id);
-				if (track) {
-					stream.removeTrack(track);
-					trackMap.delete(participant.id);
+		const unsubMic = call.participants.joined.subscribe(
+			'micUpdate',
+			(participant) => {
+				if (participant.micEnabled && participant.micTrack) {
+					stream.addTrack(participant.micTrack);
+					trackMap.set(participant.id, participant.micTrack);
+					audio.srcObject = stream;
+				} else {
+					const track = trackMap.get(participant.id);
+					if (track) {
+						stream.removeTrack(track);
+						trackMap.delete(participant.id);
+					}
 				}
-			}
-		});
+			},
+		);
+
+		const unsubScreenshare = call.participants.joined.subscribe(
+			'screenshareUpdate',
+			(participant) => {
+				if (
+					participant.screenshareEnabled &&
+					participant.screenshareTracks?.audio
+				) {
+					stream.addTrack(participant.screenshareTracks.audio);
+					trackMap.set(
+						'screenshare-' + participant.id,
+						participant.screenshareTracks.audio,
+					);
+				} else {
+					const track = trackMap.get('screenshare-' + participant.id);
+					if (track) {
+						stream.removeTrack(track);
+						trackMap.delete('screenshare-' + participant.id);
+					}
+				}
+			},
+		);
+
+		return () => {
+			unsubMic();
+			unsubScreenshare();
+		};
 	}, [call]);
 
 	return (
