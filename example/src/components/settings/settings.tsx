@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMeetingStore } from '../../data/meeting-store';
-import { useCall } from 'callskit/react';
+import { useCall, useCallSelector } from 'callskit/react';
 
 export function Settings({
 	audioRef,
@@ -8,15 +8,17 @@ export function Settings({
 	audioRef: React.RefObject<HTMLAudioElement>;
 }) {
 	const call = useCall();
+	const self = useCallSelector((c) => c.self);
 	const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 	const dialogRef = useRef<HTMLDialogElement>(null);
 	const store = useMeetingStore();
 
 	useEffect(() => {
-		call.self.devices.then((devices) => {
+		self.devices.then((devices) => {
 			setDevices(devices);
 		});
-	}, [call]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [self.micEnabled, self.cameraEnabled]);
 
 	useEffect(() => {
 		if (store.settingsOpen) {
