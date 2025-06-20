@@ -1,16 +1,17 @@
 import { useCallSelector } from 'callskit/react';
 import { useGridLayout, useContainerDimensions } from 'good-grid/react';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ParticipantTile } from './participant-tile';
 import { AnimatePresence } from 'motion/react';
 import { type Dimensions } from 'good-grid';
 import { ScreenshareTile } from './screenshare-tile';
 
 function Tiles({ dimensions }: { dimensions: Dimensions }) {
+	const self = useCallSelector((call) => call.self);
 	const participants = useCallSelector(
 		(call) => call.participants.joined,
 	).toArray();
-	const self = useCallSelector((call) => call.self);
+
 	const allParticipants = useMemo(
 		() => [...participants, self],
 		[participants, self],
@@ -20,26 +21,53 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 		return allParticipants.filter((p) => p.screenshareEnabled);
 	}, [allParticipants]);
 
-	const hasMainView = screenshares.length > 0;
+	const excessScreenshares = useMemo(
+		() => Math.max(0, screenshares.length - 1),
+		[screenshares.length],
+	);
+
+	const hasMainView = useMemo(
+		() => screenshares.length > 0,
+		[screenshares.length],
+	);
 
 	const isMobile = useMemo(() => {
 		return dimensions.width < dimensions.height;
 	}, [dimensions.width, dimensions.height]);
 
+	const [activeScreenshare, setActiveScreenshare] = useState(
+		() => screenshares[0],
+	);
+
+	const aspectRatio = useMemo(() => (isMobile ? 4 / 3 : 16 / 10), [isMobile]);
+
 	const grid = useGridLayout({
-		aspectRatio: 4 / 3,
+		aspectRatio,
 		gap: 8,
-		count: allParticipants.length,
+		count: allParticipants.length + excessScreenshares,
 		dimensions: dimensions,
 		isVertical: isMobile,
 		mainView: hasMainView
 			? {
-					aspectRatio: isMobile ? 4 / 3 : 16 / 9,
+					aspectRatio,
 					maxWidthRatio: 0.75,
 					maxHeightRatio: 0.75,
 				}
 			: undefined,
 	});
+
+	useEffect(() => {
+		// cleanup any stale activeScreenshare value
+		if (activeScreenshare && screenshares.length > 0) {
+			if (!screenshares.some((p) => p.id === activeScreenshare.id)) {
+				setActiveScreenshare(screenshares[0]);
+			}
+		} else if (!activeScreenshare && screenshares.length > 0) {
+			setActiveScreenshare(screenshares[0]);
+		} else if (activeScreenshare && screenshares.length === 0) {
+			setActiveScreenshare(undefined);
+		}
+	}, [screenshares, activeScreenshare]);
 
 	return (
 		<AnimatePresence>
@@ -75,6 +103,32 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 					/>
 				);
 			})}
+
+			{excessScreenshares > 0 &&
+				screenshares.map((participant, index) => {
+					const { top, left, width, height } = grid.positionFor(
+						allParticipants.length - 1 + index,
+					);
+
+					return (
+						<ScreenshareTile
+							participant={participant}
+							key={`screenshare-${participant.id}`}
+							className="cursor-pointer"
+							style={{
+								position: 'absolute',
+								top,
+								left,
+								width,
+								height,
+								transition: 'all 0.3s',
+							}}
+							onClick={() => {
+								setActiveScreenshare(participant);
+							}}
+						/>
+					);
+				})}
 		</AnimatePresence>
 	);
 }

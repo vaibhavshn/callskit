@@ -143,7 +143,7 @@ function Participant({
 				<div
 					className={clsx(
 						'*:size-5',
-						!participant.micEnabled && 'text-red-700',
+						!participant.micEnabled && 'text-red-600',
 					)}
 				>
 					{participant.micEnabled ? <MicRegular /> : <MicOffRegular />}
@@ -151,7 +151,7 @@ function Participant({
 				<div
 					className={clsx(
 						'*:size-5',
-						!participant.cameraEnabled && 'text-red-700',
+						!participant.cameraEnabled && 'text-red-600',
 					)}
 				>
 					{participant.cameraEnabled ? <VideoRegular /> : <VideoOffRegular />}
