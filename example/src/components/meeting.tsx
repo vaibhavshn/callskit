@@ -120,7 +120,9 @@ export function Meeting() {
 
 			<footer className="grid shrink-0 grid-cols-3 items-center px-3 py-2">
 				<div className="flex items-center">
-					<CameraQualitySelector />
+					<div>
+						<CameraQualitySelector />
+					</div>
 				</div>
 				<div className="flex h-full items-center justify-center gap-2">
 					<MicToggle />

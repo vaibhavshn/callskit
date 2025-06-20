@@ -99,7 +99,7 @@ function Chat() {
 						name=""
 						id=""
 						placeholder="Message everyone..."
-						className="min-h-20 resize-none p-2 text-sm outline-none bg-transparent border-none ring-0"
+						className="min-h-20 resize-none border-none bg-transparent p-2 text-sm ring-0 outline-none"
 						onKeyDown={(e) => {
 							if (
 								!e.shiftKey &&

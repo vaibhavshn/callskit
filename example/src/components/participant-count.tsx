@@ -11,7 +11,7 @@ export function ParticipantCount() {
 	return (
 		<button
 			className={clsx(
-				'border border-cf-light text-cf-dark flex gap-0.5 items-center rounded-md h-full px-1.5 cursor-pointer',
+				'border-cf-light text-cf-dark flex h-full cursor-pointer items-center gap-0.5 rounded-md border px-1.5',
 				'data-active:bg-cf-dark data-active:border-transparent data-active:text-white',
 			)}
 			onClick={() =>
