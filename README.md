@@ -33,3 +33,5 @@ npm run dev:web
 ```
 
 This will start development build for callskit and start the example as well.
+
+Now you can visit http://localhost:5173 to view the example.
