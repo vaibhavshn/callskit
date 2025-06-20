@@ -7,7 +7,8 @@ export type ParticipantControllerEvents = {
 	updated: (participant: CallParticipant) => void;
 	removed: (participant: CallParticipant) => void;
 
-	// emitted from CallParticipant
+	// re-emitted from CallParticipant
+	// useful for react state updates with useCallSelector
 	micUpdate: (participant: CallParticipant) => void;
 	cameraUpdate: (participant: CallParticipant) => void;
 	screenshareUpdate: (participant: CallParticipant) => void;
@@ -15,7 +16,6 @@ export type ParticipantControllerEvents = {
 
 export class ParticipantsController extends EventsHandler<ParticipantControllerEvents> {
 	joined = new CallParticipantMap();
-	lastSpeaker: CallParticipant | undefined;
 
 	constructor() {
 		super();

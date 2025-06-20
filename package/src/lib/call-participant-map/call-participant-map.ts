@@ -89,6 +89,6 @@ export class CallParticipantMap
 	}
 
 	get [Symbol.toStringTag]() {
-		return 'MyMap';
+		return 'CallParticipantMap';
 	}
 }

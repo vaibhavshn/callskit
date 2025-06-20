@@ -96,8 +96,6 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			cameraEncodings$: new BehaviorSubject<RTCRtpEncodingParameters[]>(
 				cameraEncodings,
 			),
-			// volumeContext: new AudioContext(),
-			// maxOnStageParticipants: options.config?.maxOnStageParticipants ?? 9,
 			onError: options.onError,
 		};
 

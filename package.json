@@ -5,13 +5,16 @@
 		"example"
 	],
 	"devDependencies": {
+		"concurrently": "^9.1.2",
 		"prettier": "^3.5.3",
 		"tsup": "^8.4.0",
 		"typescript": "^5.8.2",
 		"vite": "^6.2.0"
 	},
 	"scripts": {
-		"build": "npm run build --workspaces --if-present"
+		"build": "npm run build --workspaces --if-present",
+		"dev:servers": "concurrently \"npm run dev -w api-server\" \"npm run dev -w socket\"",
+		"dev:web": "concurrently \"npm run dev -w package\" \"npm run dev -w example\""
 	},
 	"prettier": {
 		"singleQuote": true,

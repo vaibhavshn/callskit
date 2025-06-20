@@ -1,5 +1,5 @@
 import throttle from 'lodash-es/throttle';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import invariant from 'tiny-invariant';
 import { CallClient } from '../lib/call-client/call-client';
 import { shallow } from './shallow';
