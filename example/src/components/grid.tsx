@@ -72,8 +72,6 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 		}
 	}, [screenshares, activeScreenshare]);
 
-	console.log({ activeScreenshare, excessScreenshares, screenshares });
-
 	return (
 		<AnimatePresence>
 			{grid.mainViewLayout && activeScreenshare && (
@@ -98,6 +96,7 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 						participant={participant}
 						key={participant.id}
 						className="!absolute"
+						initial={{ top, left, width, height }}
 						animate={{ top, left, width, height }}
 					/>
 				);
@@ -114,6 +113,7 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 							participant={participant}
 							key={`screenshare-${participant.id}`}
 							className="!absolute cursor-pointer"
+							initial={{ top, left, width, height }}
 							animate={{ top, left, width, height }}
 							onClick={() => {
 								setActiveScreenshare(participant);
