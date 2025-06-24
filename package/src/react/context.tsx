@@ -36,16 +36,16 @@ export function CallProvider({
 
 		const onCallback = throttle(() => {
 			callbacks.current.forEach((cb) => cb());
-		}, 100);
+		}, 180);
 
-		call.subscribeAll(onCallback);
-		call.self.subscribeAll(onCallback);
-		call.chat.subscribeAll(onCallback);
+		const unsubscribeCall = call.subscribeAll(onCallback);
+		const unsubscribeSelf = call.self.subscribeAll(onCallback);
+		const unsubscribeChat = call.chat.subscribeAll(onCallback);
 
 		return () => {
-			call.unsubscribeAll(onCallback);
-			call.self.unsubscribeAll(onCallback);
-			call.chat.unsubscribeAll(onCallback);
+			unsubscribeCall();
+			unsubscribeSelf();
+			unsubscribeChat();
 		};
 	}, [call]);
 
@@ -69,30 +69,35 @@ export function useCallSelector<CallSlice>(
 ) {
 	const ctx = React.useContext(CallContext);
 	invariant(ctx?.call, 'useCallSelector must be used within a CallProvider');
-	const call = ctx.call;
+	const { call, subscribe } = ctx;
 
-	const [slice, setSlice] = React.useState(() => selector(call));
-	const prevSlice = React.useRef<CallSlice>(slice);
-	const [state, forceUpdate] = React.useReducer((state) => state + 1, 0);
+	const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
+
+	const selectorRef = React.useRef(selector);
+	selectorRef.current = selector;
+
+	const slice = selectorRef.current(call);
+	const sliceRef = React.useRef(slice);
+	sliceRef.current = slice;
+
+	React.useEffect(() => {
+		const unsubscribe = subscribe(() => {
+			const nextSlice = selectorRef.current(call);
+			if (!shallow(sliceRef.current, nextSlice)) {
+				forceUpdate();
+			}
+		});
+		return unsubscribe;
+	}, [subscribe, call]);
 
 	React.useEffect(() => {
 		if (slice instanceof EventsHandler) {
-			return slice.subscribeAll((event, ...args) => {
-				if (event === 'volumeChange') {
-					return;
-				}
+			const unsubscribe = slice.subscribeAll(() => {
 				forceUpdate();
 			});
+			return unsubscribe;
 		}
-
-		return ctx.subscribe(() => {
-			const next = selector(call);
-			if (!shallow(prevSlice.current, next)) {
-				prevSlice.current = next;
-				setSlice(next);
-			}
-		});
-	}, []);
+	}, [slice]);
 
 	return slice;
 }
