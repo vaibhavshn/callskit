@@ -1,3 +1,4 @@
+/** A function type that accepts any number of arguments and returns no value. */
 type Callback = (...args: any[]) => void;
 
 export type BaseEventsMap = {
@@ -5,20 +6,19 @@ export type BaseEventsMap = {
 };
 
 export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
-	#callbacksMap: Map<string, Callback[]>;
-	#globalCallbacks: Callback[];
+	#callbacksMap: Map<string, Set<Callback>>;
+	#globalCallbacks: Set<Callback>;
 
 	constructor() {
 		this.#callbacksMap = new Map();
-		this.#globalCallbacks = [];
+		this.#globalCallbacks = new Set();
 	}
 
 	emit<K extends keyof TEventsMap>(
 		event: K extends string ? K : never,
 		...args: Parameters<TEventsMap[K]>
 	) {
-		const callbacks = this.#callbacksMap.get(event);
-		callbacks?.forEach((callback) => callback(...args));
+		this.#callbacksMap.get(event)?.forEach((callback) => callback(...args));
 		this.#globalCallbacks.forEach((callback) => callback(event, ...args));
 	}
 
@@ -26,43 +26,38 @@ export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
 		event: K extends string ? K : never,
 		callback: TEventsMap[K],
 	) {
-		const callbacks = this.#callbacksMap.get(event) ?? [];
-		callbacks.push(callback);
-		this.#callbacksMap.set(event as string, callbacks);
+		if (!this.#callbacksMap.has(event)) {
+			this.#callbacksMap.set(event, new Set());
+		}
+		this.#callbacksMap.get(event)!.add(callback);
 	}
 
 	removeEventListener<K extends keyof TEventsMap>(
 		event: K extends string ? K : never,
 		callback: TEventsMap[K],
 	) {
-		const callbacks = this.#callbacksMap.get(event);
-		if (!callbacks) return;
-		callbacks.splice(callbacks.indexOf(callback), 1);
+		this.#callbacksMap.get(event)?.delete(callback);
 	}
 
 	subscribe<K extends keyof TEventsMap>(
 		event: K extends string ? K : never,
 		callback: TEventsMap[K],
 	) {
-		const callbacks = this.#callbacksMap.get(event) ?? [];
-		callbacks.push(callback);
-		this.#callbacksMap.set(event as string, callbacks);
-		return () => {
-			callbacks.splice(callbacks.indexOf(callback), 1);
-		};
+		this.addEventListener(event, callback);
+		return () => this.removeEventListener(event, callback);
 	}
 
 	subscribeAll<K extends keyof TEventsMap>(
 		callback: (event: K, ...args: Parameters<TEventsMap[K]>) => void,
 	) {
-		this.#globalCallbacks.push(callback);
+		this.#globalCallbacks.add(callback);
 		return () => {
-			this.#globalCallbacks.splice(this.#globalCallbacks.indexOf(callback), 1);
+			this.#globalCallbacks.delete(callback);
 		};
 	}
 
 	unsubscribeAll<K extends keyof TEventsMap>(callback: TEventsMap[K]) {
-		this.#globalCallbacks.splice(this.#globalCallbacks.indexOf(callback), 1);
+		this.#globalCallbacks.delete(callback);
 	}
 
 	once<K extends keyof TEventsMap>(
@@ -83,5 +78,6 @@ export class EventsHandler<TEventsMap extends BaseEventsMap = BaseEventsMap> {
 
 	clearAll() {
 		this.#callbacksMap.clear();
+		this.#globalCallbacks.clear();
 	}
 }
