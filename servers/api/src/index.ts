@@ -24,6 +24,7 @@ app.all('/partytracks/*', (c) => {
 		turnServerAppId: c.env.TURN_TOKEN_ID,
 		turnServerAppToken: c.env.TURN_API_TOKEN,
 		request: c.req.raw,
+		turnServerCredentialTTL: 86400, // 24 hours
 	});
 });
 

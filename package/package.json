@@ -62,6 +62,7 @@
 		"tsup": "^8.5.0"
 	},
 	"peerDependencies": {
-		"partykit": "^0.0.115"
+		"partykit": "^0.0.115",
+		"react": ">=16.8"
 	}
 }
