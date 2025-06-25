@@ -6,7 +6,7 @@ To start developing, add the following env vars from the Cloudflare dashboard to
 
 ```sh
 REALTIME_APP_ID=
-REALTIME_APP_TOKEN=
+REALTIME_API_TOKEN=
 
 TURN_TOKEN_ID=
 TURN_API_TOKEN=
@@ -20,7 +20,7 @@ First run:
 npm run dev:servers
 ```
 
-This will start both the API and Socket server.
+This will start both the API and Socket servers.
 
 Then run:
 
@@ -28,6 +28,6 @@ Then run:
 npm run dev:web
 ```
 
-This will start development build for callskit and start the example as well.
+This will start development build for callskit package and start the example as well.
 
 Now you can visit http://localhost:5173 to view the example.
