@@ -3,7 +3,7 @@ import { useGridLayout, useContainerDimensions } from 'good-grid/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ParticipantTile } from './participant-tile';
 import { AnimatePresence } from 'motion/react';
-import { type Dimensions } from 'good-grid';
+import { getTrackRectData, type Dimensions } from 'good-grid';
 import { ScreenshareTile } from './screenshare-tile';
 
 function Tiles({ dimensions }: { dimensions: Dimensions }) {
@@ -50,13 +50,17 @@ function Tiles({ dimensions }: { dimensions: Dimensions }) {
 		count: allParticipants.length + excessScreenshares.length,
 		dimensions: dimensions,
 		isVertical: isMobile,
-		mainView: hasMainView
-			? {
-					aspectRatio,
-					maxWidthRatio: 0.75,
-					maxHeightRatio: 0.75,
-				}
-			: undefined,
+		mainView:
+			hasMainView && activeScreenshare?.screenshareTracks?.video
+				? {
+						aspectRatio: getTrackRectData(
+							activeScreenshare.screenshareTracks.video,
+							{ width: 1920, aspectRatio: 16 / 9 },
+						).aspectRatio,
+						maxWidthRatio: 0.75,
+						maxHeightRatio: 0.75,
+					}
+				: undefined,
 	});
 
 	useEffect(() => {

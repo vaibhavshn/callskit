@@ -43,7 +43,7 @@ export function ScreenshareTile({
 			<video
 				ref={videoRef}
 				className={clsx(
-					'absolute inset-0 z-30 size-full object-cover transition-opacity',
+					'absolute inset-0 z-30 size-full object-contain transition-opacity',
 				)}
 				autoPlay
 				muted
