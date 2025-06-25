@@ -1,12 +1,20 @@
 {
 	"name": "callskit",
 	"version": "0.0.1",
-	"description": "A client SDK for handling calls using Cloudflare Calls",
+	"description": "A toolkit for building call experience using Cloudflare Realtime",
 	"type": "module",
 	"sideEffects": false,
 	"main": "dist/index.cjs",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"author": {
+		"name": "Vaibhav Shinde",
+		"email": "vaibhavkshinde20@gmail.com",
+		"url": "https://github.com/vaibhavshn"
+	},
+	"repository": {
+		"url": "https://github.com/vaibhavshn/callskit.git"
+	},
 	"exports": {
 		".": {
 			"require": {
