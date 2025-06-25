@@ -18,6 +18,7 @@ export type CallClientOptions = {
 
 	socketBaseUrl: string;
 	apiBaseUrl: string;
+	apiHeaders?: Headers;
 
 	defaults?: {
 		audio?: boolean;
@@ -73,6 +74,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 
 		const partyTracks = new PartyTracks({
 			prefix: options.apiBaseUrl + '/partytracks',
+			headers: options.apiHeaders,
 		});
 
 		let unsubSession: Subscription | undefined = partyTracks.session$.subscribe(
