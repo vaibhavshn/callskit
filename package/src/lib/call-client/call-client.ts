@@ -7,7 +7,7 @@ import { CallChat } from '../call-chat/call-chat';
 import { runWithContext, type CallContext } from '../call-context';
 import { CallParticipant } from '../call-participant/call-participant';
 import { ParticipantsController } from '../participants-controller/participants-controller';
-import { CallSelf, type CameraRID } from '../call-self/call-self';
+import { CallSelf, type VideoEncodingRid } from '../call-self/call-self';
 import { CallSocket } from '../call-socket';
 import type { CallClientEvents } from './call-client-events';
 import { cameraEncodings } from '../call-self/call-self-data';
@@ -25,7 +25,7 @@ export type CallClientOptions = {
 	};
 	autoJoin?: boolean;
 	config?: {
-		preferredCameraQuality?: CameraRID;
+		preferredCameraQuality?: VideoEncodingRid;
 	};
 	onError?: (error: Error) => void;
 	logLevel?: LogLevel;
@@ -89,8 +89,8 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			partyTracks,
 			call: this,
 			logger: this.#logger,
-			cameraRid$: new BehaviorSubject<CameraRID>(
-				options.config?.preferredCameraQuality ?? 'a',
+			cameraRid$: new BehaviorSubject<VideoEncodingRid>(
+				options.config?.preferredCameraQuality ?? 'high',
 			),
 			cameraEncodings$: new BehaviorSubject<RTCRtpEncodingParameters[]>(
 				cameraEncodings,
@@ -125,8 +125,8 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 		return this.#ctx.cameraRid$.value;
 	}
 
-	setRemoteCameraTrackQuality(quality: CameraRID) {
-		const qualities: CameraRID[] = ['a', 'b'];
+	setRemoteCameraTrackQuality(quality: VideoEncodingRid) {
+		const qualities: VideoEncodingRid[] = ['high', 'low'];
 		if (qualities.includes(quality)) {
 			const oldQuality = this.#ctx.cameraRid$.value;
 			this.#ctx.cameraRid$.next(quality);

@@ -2,7 +2,7 @@ import type { PartyTracks } from 'partytracks/client';
 import type { BehaviorSubject } from 'rxjs';
 import invariant from 'tiny-invariant';
 import type { Logger } from '../utils/logger';
-import type { CameraRID } from './call-self/call-self';
+import type { VideoEncodingRid } from './call-self/call-self';
 import type { CallSocket } from './call-socket';
 import type { CallClient } from './call-client/call-client';
 
@@ -11,7 +11,7 @@ export type CallContext = {
 	partyTracks: PartyTracks;
 	call: CallClient;
 	logger: Logger;
-	cameraRid$: BehaviorSubject<CameraRID>;
+	cameraRid$: BehaviorSubject<VideoEncodingRid>;
 	cameraEncodings$: BehaviorSubject<RTCRtpEncodingParameters[]>;
 	onError?: (error: Error) => void;
 };

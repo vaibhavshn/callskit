@@ -1,4 +1,4 @@
-import type { CameraRID } from '../call-self/call-self';
+import type { VideoEncodingRid } from '../call-self/call-self';
 
 type CallEvents = {
 	connected: () => void;
@@ -7,7 +7,7 @@ type CallEvents = {
 
 	mediaConnected: () => void;
 
-	cameraQualityChanged: (newQuality: CameraRID, oldQuality: CameraRID) => void;
+	cameraQualityChanged: (newQuality: VideoEncodingRid, oldQuality: VideoEncodingRid) => void;
 };
 
 export type CallClientEvents = CallEvents;

@@ -22,7 +22,7 @@ export type CallSelfOptions = {
  * - `a` is High Quality
  * - `b` is Data Saver
  */
-export type CameraRID = 'a' | 'b';
+export type VideoEncodingRid = 'high' | 'low';
 
 export class CallSelf extends EventsHandler<CallSelfEvents> {
 	id: string = crypto.randomUUID();
