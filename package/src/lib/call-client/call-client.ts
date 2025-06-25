@@ -15,21 +15,20 @@ import { cameraEncodings } from '../call-self/call-self-data';
 export type CallClientOptions = {
 	room: string;
 	displayName: string;
+
+	socketBaseUrl: string;
+	apiBaseUrl: string;
+
 	defaults?: {
 		audio?: boolean;
 		video?: boolean;
 	};
-	logLevel?: LogLevel;
 	autoJoin?: boolean;
 	config?: {
 		preferredCameraQuality?: CameraRID;
-		/**
-		 *	Maximum number of participants allowed on stage at a time
-		 *	@default 9
-		 */
-		maxOnStageParticipants?: number;
 	};
 	onError?: (error: Error) => void;
+	logLevel?: LogLevel;
 };
 
 setLogLevel('debug');
@@ -59,7 +58,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 
 		const socket = new CallSocket({
 			room: this.room,
-			host: import.meta.env.SOCKET_URL,
+			host: options.socketBaseUrl,
 			logger: this.#logger,
 		});
 
@@ -73,7 +72,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 		}
 
 		const partyTracks = new PartyTracks({
-			prefix: import.meta.env.API_URL + '/partytracks',
+			prefix: options.apiBaseUrl + '/partytracks',
 		});
 
 		let unsubSession: Subscription | undefined = partyTracks.session$.subscribe(

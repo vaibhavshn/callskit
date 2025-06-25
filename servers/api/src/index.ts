@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { routePartyTracksRequest } from 'partytracks/server';
+import { routeApiRequest } from 'callskit/server';
 
 type Bindings = {
 	REALTIME_APP_ID: string;
-	REALTIME_APP_TOKEN: string;
+	REALTIME_API_TOKEN: string;
 	TURN_TOKEN_ID: string;
 	TURN_API_TOKEN: string;
 };
@@ -12,15 +12,15 @@ type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>();
 
 app.get('/', (c) => {
-	return c.text('Hello Hono!');
+	return c.text('Hello world!');
 });
 
 app.use('/partytracks/*', cors());
 
 app.all('/partytracks/*', (c) => {
-	return routePartyTracksRequest({
+	return routeApiRequest({
 		appId: c.env.REALTIME_APP_ID,
-		token: c.env.REALTIME_APP_TOKEN,
+		token: c.env.REALTIME_API_TOKEN,
 		turnServerAppId: c.env.TURN_TOKEN_ID,
 		turnServerAppToken: c.env.TURN_API_TOKEN,
 		request: c.req.raw,

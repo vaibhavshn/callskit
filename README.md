@@ -10,6 +10,24 @@ See [contributing guide](./CONTRIBUTING.md) for development setup.
 
 ### Core API Usage (JS)
 
+First you would need to route API requests in an API server like so:
+
+```ts
+import { routeApiRequest } from 'callskit/server';
+
+app.all('/partytracks/*', (c) => {
+	return routeApiRequest({
+		appId: c.env.REALTIME_APP_ID,
+		token: c.env.REALTIME_API_TOKEN,
+		turnServerAppId: c.env.TURN_TOKEN_ID,
+		turnServerAppToken: c.env.TURN_API_TOKEN,
+		request: c.req.raw,
+	});
+});
+```
+
+Refer [servers/api/src/index.ts](./servers/api/src/index.ts) for a full hono example.
+
 ```js
 const call = await createCall({ room: 'abc-xyz' });
 

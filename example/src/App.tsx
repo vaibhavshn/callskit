@@ -14,6 +14,16 @@ function CallApp() {
 	return <Meeting />;
 }
 
+const ENV = import.meta.env.DEV
+	? {
+			SOCKET_URL: 'http://127.0.0.1:1999',
+			API_URL: 'http://localhost:8787',
+		}
+	: {
+			SOCKET_URL: 'https://callskit-socket.vaibhavshn.partykit.dev',
+			API_URL: 'https://callskit-server.vaibhavshn-in.workers.dev',
+		};
+
 function App() {
 	const [call, createCall] = useCreateCall();
 
@@ -24,8 +34,10 @@ function App() {
 			room,
 			displayName: 'User ' + Math.random().toString(36).substring(7),
 			logLevel: 'debug',
-			config: { maxOnStageParticipants: 9, preferredCameraQuality: 'a' },
+			config: { preferredCameraQuality: 'a' },
 			autoJoin: window.location.hash === '#join',
+			socketBaseUrl: ENV.SOCKET_URL,
+			apiBaseUrl: ENV.API_URL,
 			// defaults: { audio: true, video: true },
 		});
 	}, [createCall]);
