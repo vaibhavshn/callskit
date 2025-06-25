@@ -14,20 +14,18 @@ TURN_API_TOKEN=
 
 Now just run the following commands in two terminals.
 
-First run:
+```sh
+npm run dev:web
+```
+
+This will start development build for callskit package and start the example as well.
+
+Then run:
 
 ```sh
 npm run dev:servers
 ```
 
 This will start both the API and Socket servers.
-
-Then run:
-
-```sh
-npm run dev:web
-```
-
-This will start development build for callskit package and start the example as well.
 
 Now you can visit http://localhost:5173 to view the example.
