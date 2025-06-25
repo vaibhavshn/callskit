@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMeetingStore } from '../../data/meeting-store';
 import { useCall, useCallSelector } from 'callskit/react';
+import { DismissRegular } from '@fluentui/react-icons';
 
 export function Settings({
 	audioRef,
@@ -37,12 +38,18 @@ export function Settings({
 	return (
 		<dialog
 			ref={dialogRef}
-			className="m-auto w-full max-w-lg flex-col gap-3 rounded-lg p-4 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex"
+			className="relative m-auto w-full max-w-lg flex-col gap-3 rounded-lg p-4 backdrop:bg-black/30 backdrop:backdrop-blur-sm open:flex"
 			onClose={() => {
 				store.setSettingsOpen(false);
 			}}
 		>
 			<h3 className="mb-3 text-xl font-semibold">Device Settings</h3>
+			<button
+				onClick={() => store.setSettingsOpen(false)}
+				className="absolute top-3 right-3 inline-flex cursor-pointer rounded-md border !border-zinc-400 p-1.5 dark:!border-zinc-800"
+			>
+				<DismissRegular className="size-4" />
+			</button>
 
 			<div className="flex flex-col gap-3">
 				<div className="flex items-center gap-2">

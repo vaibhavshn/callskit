@@ -28,7 +28,7 @@ export function ControlbarButton({
 	return (
 		<button
 			className={clsx(
-				'inline-flex h-10 cursor-pointer items-center rounded-lg px-3 text-sm transition-all outline-none *:size-6 hover:z-50',
+				'inline-flex size-12 cursor-pointer items-center rounded-xl px-3 text-sm transition-all outline-none *:size-6 hover:z-50',
 				'bg-gradient-to-br from-orange-100 to-orange-200 text-orange-950',
 				'dark:from-orange-400/70 dark:to-orange-600/60 dark:text-white',
 				className,
