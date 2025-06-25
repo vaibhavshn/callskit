@@ -13,6 +13,7 @@
 		"url": "https://github.com/vaibhavshn"
 	},
 	"repository": {
+		"type": "git",
 		"url": "https://github.com/vaibhavshn/callskit.git"
 	},
 	"exports": {
