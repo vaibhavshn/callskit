@@ -1,6 +1,6 @@
 {
 	"name": "callskit",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"description": "A client SDK for handling calls using Cloudflare Calls",
 	"type": "module",
 	"sideEffects": false,

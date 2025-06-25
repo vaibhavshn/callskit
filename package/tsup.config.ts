@@ -23,7 +23,7 @@ export default defineConfig([
 		clean: true,
 		treeshake: true,
 		env: env,
-		external: ['react', 'partysocket', 'partytracks', 'rxjs'],
+		external: ['react'],
 	},
 	{
 		entry: {

@@ -46,7 +46,7 @@ export class PartyKitServer implements Party.Server {
 	onMessage(message: string, sender: Party.Connection) {
 		const payload = parseAction(message);
 		const user = this.users.get(sender.id);
-		
+
 		console.log(`received message from ${sender.id}: ${payload}`);
 
 		switch (payload.action) {
@@ -149,3 +149,5 @@ export class PartyKitServer implements Party.Server {
 }
 
 PartyKitServer satisfies Party.Worker;
+
+export { routePartyTracksRequest as routeApiRequest } from 'partytracks/server';
