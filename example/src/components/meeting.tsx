@@ -14,7 +14,7 @@ import { ParticipantCount } from './participant-count';
 import { useEffect, useRef } from 'react';
 import { useCall } from 'callskit/react';
 import { Button } from './primitives/button';
-import { DismissRegular, PlayRegular } from '@fluentui/react-icons';
+import { PlayRegular } from '@fluentui/react-icons';
 import { Settings } from './settings/settings';
 
 export function Meeting() {
