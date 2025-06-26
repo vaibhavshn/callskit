@@ -35,6 +35,7 @@ export class PartyKitServer implements Party.Server {
 			this.users.delete(connection.id);
 			this.room.broadcast(
 				createEvent({ event: 'participant/left', participantId: user.id }),
+				[connection.id],
 			);
 		}
 
@@ -49,9 +50,12 @@ export class PartyKitServer implements Party.Server {
 
 		console.log(`received message from ${sender.id}: ${payload}`);
 
+		console.log(...this.users.keys());
+
 		switch (payload.action) {
 			case 'join': {
 				const user: User = { ...payload.self, connectionId: sender.id };
+				const without = [...this.users.keys()];
 				this.room.broadcast(
 					createEvent({
 						event: 'room/init',
@@ -59,7 +63,7 @@ export class PartyKitServer implements Party.Server {
 						started_at: this.started_at.toISOString(),
 						chatMessages: this.chat,
 					}),
-					[...this.users.keys()],
+					without,
 				);
 				this.users.set(sender.id, user);
 				this.room.broadcast(

@@ -52,7 +52,7 @@
 	},
 	"dependencies": {
 		"partysocket": "^1.1.4",
-		"partytracks": "^0.0.49",
+		"partytracks": "^0.0.50",
 		"rxjs": "^7.8.2",
 		"tiny-invariant": "^1.3.3"
 	},
