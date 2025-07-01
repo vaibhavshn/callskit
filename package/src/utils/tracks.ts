@@ -79,3 +79,8 @@ export const inaudibleAudioTrack$ = new Observable<MediaStreamTrack>(
 export function createTrackId(metadata: TrackMetadata) {
 	return `${metadata.sessionId}/${metadata.trackName}`;
 }
+
+export function parseTrackId(trackId: string) {
+	const [sessionId, trackName] = trackId.split('/');
+	return { sessionId, trackName };
+}

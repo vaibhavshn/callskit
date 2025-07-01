@@ -351,4 +351,8 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			screenshareAudioTrackId: this.#screenshareAudioTrackId,
 		};
 	}
+
+	toString() {
+		return `CallSelf::${this.id}::${this.name}`;
+	}
 }

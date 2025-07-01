@@ -4,6 +4,7 @@ import { EventsHandler } from '../../utils/events-handler';
 import type { CallParticipantEvents } from './call-participant-events';
 import { type TrackMetadata } from 'partytracks/client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
+import { parseTrackId } from '../../utils/tracks';
 
 interface CallParticipantOptions extends Partial<SerializedUser> {
 	id: string;
@@ -69,7 +70,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			options.cameraEnabled ? options.cameraTrackId : undefined,
 		);
 
-		this.#screenshareEnabled = options.screenshareEnabled ?? false;
+		this.#screenshareEnabled = options.screenshareEnabled || false;
 
 		this.#screenshareVideoTrackId$ = new BehaviorSubject<string | undefined>(
 			options.screenshareEnabled ? options.screenshareVideoTrackId : undefined,
@@ -83,7 +84,6 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			if (!enabled) {
 				this.#micEnabled = false;
 				this.emit('micUpdate', { micEnabled: false });
-				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
 			} else if (enabled && this.#micTrack) {
 				this.#micEnabled = true;
@@ -91,15 +91,15 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 					micEnabled: true,
 					micTrack: this.#micTrack,
 				});
-				this.#ctx.call.participants.emit('micUpdate', this);
 				this.#ctx.call.participants.joined.emit('micUpdate', this);
+				this.#ctx.call.participants.emit('micUpdate', this);
 			}
 		});
 
 		const micMetadata$ = this.#micTrackId$.pipe(
 			filter((id) => typeof id === 'string'),
 			switchMap((id) => {
-				const [sessionId, trackName] = id.split('/');
+				const { sessionId, trackName } = parseTrackId(id);
 				return of({
 					sessionId,
 					trackName,
@@ -114,31 +114,31 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#micEnabled = true;
 			this.#micTrack = track;
 			this.emit('micUpdate', { micEnabled: true, micTrack: track });
-			this.#ctx.call.participants.emit('micUpdate', this);
 			this.#ctx.call.participants.joined.emit('micUpdate', this);
+			this.#ctx.call.participants.emit('micUpdate', this);
 		});
 
 		this.#cameraEnabled$.subscribe((enabled) => {
 			if (!enabled) {
 				this.#cameraEnabled = false;
 				this.emit('cameraUpdate', { cameraEnabled: false });
-				this.#ctx.call.participants.emit('cameraUpdate', this);
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
+				this.#ctx.call.participants.emit('cameraUpdate', this);
 			} else if (enabled && this.#cameraTrack) {
 				this.#cameraEnabled = true;
 				this.emit('cameraUpdate', {
 					cameraEnabled: true,
 					cameraTrack: this.#cameraTrack,
 				});
-				this.#ctx.call.participants.emit('cameraUpdate', this);
 				this.#ctx.call.participants.joined.emit('cameraUpdate', this);
+				this.#ctx.call.participants.emit('cameraUpdate', this);
 			}
 		});
 
 		const cameraMetadata$ = this.#cameraTrackId$.pipe(
 			filter((id) => typeof id === 'string'),
 			switchMap((id) => {
-				const [sessionId, trackName] = id.split('/');
+				const { sessionId, trackName } = parseTrackId(id);
 				return of({
 					sessionId,
 					trackName,
@@ -155,14 +155,14 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#cameraEnabled = true;
 			this.#cameraTrack = track;
 			this.emit('cameraUpdate', { cameraEnabled: true, cameraTrack: track });
-			this.#ctx.call.participants.emit('cameraUpdate', this);
 			this.#ctx.call.participants.joined.emit('cameraUpdate', this);
+			this.#ctx.call.participants.emit('cameraUpdate', this);
 		});
 
 		const screenshareVideoMetadata$ = this.#screenshareVideoTrackId$.pipe(
 			filter((id) => typeof id === 'string'),
 			switchMap((id) => {
-				const [sessionId, trackName] = id.split('/');
+				const { sessionId, trackName } = parseTrackId(id);
 				return of({
 					sessionId,
 					trackName,
@@ -182,14 +182,14 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				screenshareVideoTrack: track,
 				screenshareAudioTrack: this.#screenshareAudioTrack,
 			});
-			this.#ctx.call.participants.emit('screenshareUpdate', this);
 			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);
+			this.#ctx.call.participants.emit('screenshareUpdate', this);
 		});
 
 		const screenshareAudioMetadata$ = this.#screenshareAudioTrackId$.pipe(
 			filter((id) => typeof id === 'string'),
 			switchMap((id) => {
-				const [sessionId, trackName] = id.split('/');
+				const { sessionId, trackName } = parseTrackId(id);
 				return of({
 					sessionId,
 					trackName,
@@ -209,8 +209,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 				screenshareVideoTrack: this.#screenshareVideoTrack,
 				screenshareAudioTrack: track,
 			});
-			this.#ctx.call.participants.emit('screenshareUpdate', this);
 			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);
+			this.#ctx.call.participants.emit('screenshareUpdate', this);
 		});
 	}
 
@@ -258,8 +258,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#screenshareAudioTrackId$.next(undefined);
 			this.#screenshareEnabled = false;
 			this.emit('screenshareUpdate', { screenshareEnabled: false });
-			this.#ctx.call.participants.emit('screenshareUpdate', this);
 			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);
+			this.#ctx.call.participants.emit('screenshareUpdate', this);
 		}
 	}
 
@@ -292,6 +292,10 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			video: this.#screenshareVideoTrack!,
 			audio: this.#screenshareAudioTrack,
 		};
+	}
+
+	toString() {
+		return `CallParticipant::${this.id}::${this.name}`;
 	}
 
 	static fromJSON(obj: SerializedUser): CallParticipant {
