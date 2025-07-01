@@ -16,17 +16,17 @@ export function ScreenshareTile({
 	const isSelf = call.self.id === participant.id;
 
 	useEffect(() => {
+		console.log(participant.screenshareEnabled, participant.screenshareTracks);
 		if (
 			participant.screenshareEnabled &&
 			participant.screenshareTracks?.video
 		) {
-			const { video } = participant.screenshareTracks;
-			const stream = new MediaStream([video]);
+			const stream = new MediaStream([participant.screenshareTracks.video]);
 			videoRef.current!.srcObject = stream;
 		} else {
 			videoRef.current!.srcObject = null;
 		}
-	}, [participant.screenshareEnabled, participant.screenshareTracks]);
+	}, [participant.screenshareEnabled, participant.screenshareTracks?.video]);
 
 	const id = `screenshare-${participant.id}`;
 
