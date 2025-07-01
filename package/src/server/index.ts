@@ -6,6 +6,8 @@ import type { ChatMessage } from '..';
 export class PartyKitServer implements Party.Server {
 	started_at!: Date;
 
+	connectionIds: string[] = [];
+
 	users = new Map<string, User>();
 
 	chat: ChatMessage[] = [];
@@ -26,6 +28,7 @@ export class PartyKitServer implements Party.Server {
   room: ${this.room.id}
   url: ${new URL(ctx.request.url).pathname}`,
 		);
+		this.connectionIds.push(conn.id);
 		conn.send(createEvent({ event: 'connected' }));
 	}
 
@@ -33,6 +36,9 @@ export class PartyKitServer implements Party.Server {
 		const user = this.users.get(connection.id);
 		if (user) {
 			this.users.delete(connection.id);
+			this.connectionIds = this.connectionIds.filter(
+				(id) => id !== connection.id,
+			);
 			this.room.broadcast(
 				createEvent({ event: 'participant/left', participantId: user.id }),
 				[connection.id],
@@ -50,12 +56,10 @@ export class PartyKitServer implements Party.Server {
 
 		console.log(`received message from ${sender.id}: ${payload}`);
 
-		console.log(...this.users.keys());
-
 		switch (payload.action) {
 			case 'join': {
 				const user: User = { ...payload.self, connectionId: sender.id };
-				const without = [...this.users.keys()];
+				const without = [...this.users.keys(), ...this.connectionIds];
 				this.room.broadcast(
 					createEvent({
 						event: 'room/init',
@@ -63,7 +67,10 @@ export class PartyKitServer implements Party.Server {
 						started_at: this.started_at.toISOString(),
 						chatMessages: this.chat,
 					}),
-					without,
+					without.filter((id) => id !== sender.id),
+				);
+				this.connectionIds = this.connectionIds.filter(
+					(id) => id !== sender.id,
 				);
 				this.users.set(sender.id, user);
 				this.room.broadcast(
