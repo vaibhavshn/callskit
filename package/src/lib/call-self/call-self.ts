@@ -6,12 +6,13 @@ import {
 	type MediaDevice,
 	type Screenshare,
 } from 'partytracks/client';
-import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
+import { of } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import { type CallClientOptions } from '../call-client/call-client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
 import type { CallSelfEvents } from './call-self-events';
+import { createTrackId } from '../../utils/tracks';
 
 export type CallSelfOptions = {
 	name: string;
@@ -34,33 +35,63 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	#camera: MediaDevice;
 	#screenshare: Screenshare;
 
+	#micEnabled: boolean = false;
 	#micTrackId: string | undefined;
 	#micTrack: MediaStreamTrack | undefined;
 
+	#cameraEnabled: boolean = false;
 	#cameraTrackId: string | undefined;
 	#cameraTrack: MediaStreamTrack | undefined;
 
+	#screenshareEnabled: boolean = false;
 	#screenshareVideoTrackId: string | undefined;
 	#screenshareVideoTrack: MediaStreamTrack | undefined;
 	#screenshareAudioTrackId: string | undefined;
 	#screenshareAudioTrack: MediaStreamTrack | undefined;
 
+	#micDevice: MediaDeviceInfo | undefined;
+	#cameraDevice: MediaDeviceInfo | undefined;
+	#devices: MediaDeviceInfo[] | undefined = undefined;
+
 	constructor(options: CallSelfOptions) {
 		super();
+
 		this.name = options.name;
 		this.#ctx = getCurrentCallContext();
 
 		this.#mic = getMic();
 		this.#camera = getCamera();
-		this.#screenshare = getScreenshare({ audio: true });
 
-		if (options.defaults?.audio) {
-			this.startMic();
-		}
+		this.#mic.isBroadcasting$.subscribe((enabled) => {
+			this.#micEnabled = enabled;
+		});
 
-		if (options.defaults?.video) {
-			this.startCamera();
-		}
+		this.#mic.broadcastTrack$.subscribe((track) => {
+			this.#micTrack = track;
+		});
+
+		this.#camera.isBroadcasting$.subscribe((enabled) => {
+			this.#cameraEnabled = enabled;
+		});
+
+		this.#camera.broadcastTrack$.subscribe((track) => {
+			this.#cameraTrack = track;
+		});
+
+		this.#mic.activeDevice$.subscribe((device) => {
+			this.#micDevice = device;
+			this.emit('activeDeviceUpdate', 'mic', device);
+		});
+
+		this.#camera.activeDevice$.subscribe((device) => {
+			this.#cameraDevice = device;
+			this.emit('activeDeviceUpdate', 'camera', device);
+		});
+
+		devices$.subscribe((devices) => {
+			this.#devices = devices;
+			this.emit('devicesUpdate', devices);
+		});
 
 		const micMetadata$ = this.#ctx.partyTracks.push(this.#mic.broadcastTrack$, {
 			sendEncodings$: of([
@@ -68,16 +99,9 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			] satisfies RTCRtpEncodingParameters[]),
 		});
 
-		this.#mic.broadcastTrack$.subscribe((track) => {
-			this.#micTrack = track;
-		});
-
 		micMetadata$.subscribe((metadata) => {
-			const micEnabled = this.micEnabled;
-			const micTrack = this.#micTrack;
-
-			if (micEnabled && micTrack) {
-				const micTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+			if (this.#micEnabled && this.#micTrack) {
+				const micTrackId = createTrackId(metadata);
 				this.#micTrackId = micTrackId;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
@@ -88,9 +112,9 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('micUpdate', {
 					micEnabled: true,
-					micTrack,
+					micTrack: this.#micTrack,
 				});
-			} else if (!micEnabled) {
+			} else if (!this.#micEnabled) {
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
 					updates: { micEnabled: false },
@@ -106,16 +130,9 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			},
 		);
 
-		this.#camera.broadcastTrack$.subscribe((track) => {
-			this.#cameraTrack = track;
-		});
-
 		cameraMetadata$.subscribe((metadata) => {
-			const cameraEnabled = this.cameraEnabled;
-			const cameraTrack = this.#cameraTrack;
-
-			if (cameraEnabled && cameraTrack) {
-				const cameraTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+			if (this.#cameraEnabled && this.#cameraTrack) {
+				const cameraTrackId = createTrackId(metadata);
 				this.#cameraTrackId = cameraTrackId;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
@@ -126,9 +143,9 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('cameraUpdate', {
 					cameraEnabled: true,
-					cameraTrack,
+					cameraTrack: this.#cameraTrack,
 				});
-			} else if (!cameraEnabled) {
+			} else if (!this.#cameraEnabled) {
 				this.#cameraTrackId = undefined;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
@@ -136,6 +153,20 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('cameraUpdate', { cameraEnabled: false });
 			}
+		});
+
+		if (options.defaults?.audio) {
+			this.startMic();
+		}
+
+		if (options.defaults?.video) {
+			this.startCamera();
+		}
+
+		this.#screenshare = getScreenshare({ audio: true });
+
+		this.#screenshare.video.isBroadcasting$.subscribe((enabled) => {
+			this.#screenshareEnabled = enabled;
 		});
 
 		this.#screenshare.video.broadcastTrack$.subscribe((track) => {
@@ -149,12 +180,13 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		const screenshareVideoMetadata$ = this.#ctx.partyTracks.push(
 			this.#screenshare.video.broadcastTrack$,
 		);
+
 		const screenshareAudioMetadata$ = this.#ctx.partyTracks.push(
 			this.#screenshare.audio.broadcastTrack$,
 		);
 
 		screenshareVideoMetadata$.subscribe((metadata) => {
-			if (!this.screenshareEnabled) {
+			if (!this.#screenshareEnabled) {
 				this.#ctx.socket.sendAction({
 					action: 'self/screenshare-update',
 					updates: {
@@ -163,7 +195,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('screenshareUpdate', { screenshareEnabled: false });
 			} else {
-				this.#screenshareVideoTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#screenshareVideoTrackId = createTrackId(metadata);
 				this.#ctx.socket.sendAction({
 					action: 'self/screenshare-update',
 					updates: {
@@ -179,7 +211,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		});
 
 		screenshareAudioMetadata$.subscribe((metadata) => {
-			if (!this.screenshareEnabled) {
+			if (!this.#screenshareEnabled) {
 				this.#ctx.socket.sendAction({
 					action: 'self/screenshare-update',
 					updates: {
@@ -188,7 +220,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('screenshareUpdate', { screenshareEnabled: false });
 			} else {
-				this.#screenshareAudioTrackId = `${metadata.sessionId}/${metadata.trackName}`;
+				this.#screenshareAudioTrackId = createTrackId(metadata);
 				this.#ctx.socket.sendAction({
 					action: 'self/screenshare-update',
 					updates: {
@@ -228,50 +260,42 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		this.#screenshare.stopBroadcasting();
 	}
 
-	#cameraDevice: MediaDeviceInfo | undefined;
-	#micDevice: MediaDeviceInfo | undefined;
-
 	async setCameraDevice(deviceId: string) {
-		const devices = await this.devices;
-		const device = devices.find((d) => d.deviceId === deviceId);
+		const devices = this.devices;
+		const device = devices?.find((d) => d.deviceId === deviceId);
 		if (!device) {
-			throw new Error(`Device not found: ${deviceId}`);
+			throw new Error(`Camera device not found: ${deviceId}`);
 		}
-		this.#cameraDevice = device;
 		this.#camera.setPreferredDevice(device);
 	}
 
 	async setMicDevice(deviceId: string) {
-		const devices = await this.devices;
-		const device = devices.find((d) => d.deviceId === deviceId);
+		const devices = this.devices;
+		const device = devices?.find((d) => d.deviceId === deviceId);
 		if (!device) {
-			throw new Error(`Device not found: ${deviceId}`);
+			throw new Error(`Microphone device not found: ${deviceId}`);
 		}
-		this.#micDevice = device;
 		this.#mic.setPreferredDevice(device);
 	}
 
 	get micEnabled(): boolean {
-		return (this.#mic.isBroadcasting$.source as BehaviorSubject<boolean>).value;
+		return this.#micEnabled;
 	}
 
 	get micTrack(): MediaStreamTrack | undefined {
-		return this.#micTrack;
+		return this.#micEnabled ? this.#micTrack : undefined;
 	}
 
 	get cameraEnabled(): boolean {
-		return (this.#camera.isBroadcasting$.source as BehaviorSubject<boolean>)
-			.value;
+		return this.#cameraEnabled;
 	}
 
 	get cameraTrack(): MediaStreamTrack | undefined {
-		return this.#cameraTrack;
+		return this.#cameraEnabled ? this.#cameraTrack : undefined;
 	}
 
 	get screenshareEnabled(): boolean {
-		return (
-			this.#screenshare.video.isBroadcasting$.source as BehaviorSubject<boolean>
-		).value;
+		return this.#screenshareEnabled;
 	}
 
 	get screenshareTracks():
@@ -289,14 +313,22 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		};
 	}
 
-	get devices(): Promise<MediaDeviceInfo[]> {
-		return firstValueFrom(devices$);
+	get devices(): MediaDeviceInfo[] | undefined {
+		return this.#devices;
 	}
 
-	get currentDevices() {
+	get activeDevices() {
 		return {
-			mic: this.#micDevice,
-			camera: this.#cameraDevice,
+			mic:
+				this.#micDevice ??
+				this.devices?.find(
+					(d) => d.deviceId === 'default' && d.kind === 'audioinput',
+				),
+			camera:
+				this.#cameraDevice ??
+				this.devices?.find(
+					(d) => d.deviceId === 'default' && d.kind === 'videoinput',
+				),
 		};
 	}
 

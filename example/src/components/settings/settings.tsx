@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMeetingStore } from '../../data/meeting-store';
 import { useCall, useCallSelector } from 'callskit/react';
 import { DismissRegular } from '@fluentui/react-icons';
@@ -10,16 +10,8 @@ export function Settings({
 }) {
 	const call = useCall();
 	const self = useCallSelector((c) => c.self);
-	const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 	const dialogRef = useRef<HTMLDialogElement>(null);
 	const store = useMeetingStore();
-
-	useEffect(() => {
-		self.devices.then((devices) => {
-			setDevices(devices);
-		});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [self.micEnabled, self.cameraEnabled]);
 
 	useEffect(() => {
 		if (store.settingsOpen) {
@@ -29,11 +21,17 @@ export function Settings({
 		}
 	}, [store.settingsOpen]);
 
-	const mics = devices.filter((device) => device.kind === 'audioinput');
-	const cameras = devices.filter((device) => device.kind === 'videoinput');
-	const speakers = devices.filter((device) => device.kind === 'audiooutput');
+	const mics = self.devices?.filter((device) => device.kind === 'audioinput');
+	const cameras = self.devices?.filter(
+		(device) => device.kind === 'videoinput',
+	);
+	const speakers = self.devices?.filter(
+		(device) => device.kind === 'audiooutput',
+	);
 
 	const isSetSinkIdSupported = 'setSinkId' in HTMLAudioElement.prototype;
+
+	const activeDevices = call.self.activeDevices;
 
 	return (
 		<dialog
@@ -56,12 +54,13 @@ export function Settings({
 					<label className="w-20 text-sm font-medium">Mic</label>
 					<select
 						className="flex-1 shrink-0 rounded-md border border-zinc-200 bg-white/5 px-3 text-sm"
+						value={activeDevices.mic?.deviceId}
 						onChange={(e) => {
 							const deviceId = e.currentTarget.value;
 							call.self.setMicDevice(deviceId);
 						}}
 					>
-						{mics.map((device) => (
+						{mics?.map((device) => (
 							<option key={device.deviceId} value={device.deviceId}>
 								{device.label}
 							</option>
@@ -73,12 +72,13 @@ export function Settings({
 					<label className="w-20 text-sm font-medium">Camera</label>
 					<select
 						className="flex-1 shrink-0 rounded-md border border-zinc-200 bg-white/5 px-3 text-sm"
+						value={activeDevices.camera?.deviceId}
 						onChange={(e) => {
 							const deviceId = e.currentTarget.value;
 							call.self.setCameraDevice(deviceId);
 						}}
 					>
-						{cameras.map((device) => (
+						{cameras?.map((device) => (
 							<option key={device.deviceId} value={device.deviceId}>
 								{device.label}
 							</option>
@@ -96,7 +96,7 @@ export function Settings({
 								audioRef.current?.setSinkId(deviceId);
 							}}
 						>
-							{speakers.map((device) => (
+							{speakers?.map((device) => (
 								<option key={device.deviceId} value={device.deviceId}>
 									{device.label}
 								</option>

@@ -30,6 +30,8 @@ export type ParticipantMediaEvents = {
 	) => void;
 	volumeChange: (volume: number, lastVolume: number) => void;
 	nameChange: (name: string, oldName: string) => void;
+	devicesUpdate: (devices: MediaDeviceInfo[]) => void;
+	activeDeviceUpdate: (type: 'mic' | 'camera', device: MediaDeviceInfo) => void;
 };
 
 export type CallSelfEvents = ParticipantMediaEvents;
