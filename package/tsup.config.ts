@@ -9,7 +9,6 @@ export default defineConfig([
 		format: ['esm', 'cjs'],
 		dts: true,
 		treeshake: true,
-		watch: true,
 		external: ['react'],
 	},
 	{
@@ -18,7 +17,6 @@ export default defineConfig([
 		},
 		format: 'esm',
 		dts: true,
-		watch: true,
 		external: ['partykit'],
 	},
 ]);

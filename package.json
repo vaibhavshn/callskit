@@ -14,7 +14,10 @@
 	"scripts": {
 		"build": "npm run build --workspaces --if-present",
 		"dev:servers": "concurrently \"npm run dev -w api-server\" \"npm run dev -w socket\"",
-		"dev:web": "concurrently \"npm run dev -w package\" \"npm run dev -w example\""
+		"dev:web": "concurrently \"npm run dev -w package\" \"npm run dev -w example\"",
+		"dev": "npm run dev:servers & npm run dev:web",
+		"deploy:socket": "npm run build -w package && npm run deploy -w socket",
+		"deploy:server": "npm run build -w package && npm run deploy -w api-server"
 	},
 	"prettier": {
 		"singleQuote": true,
