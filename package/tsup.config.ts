@@ -10,6 +10,7 @@ export default defineConfig([
 		dts: true,
 		treeshake: true,
 		external: ['react'],
+		sourcemap: false,
 	},
 	{
 		entry: {
@@ -18,5 +19,6 @@ export default defineConfig([
 		format: 'esm',
 		dts: true,
 		external: ['partykit'],
+		sourcemap: false,
 	},
 ]);
