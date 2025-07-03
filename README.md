@@ -1,6 +1,6 @@
 # CallsKit
 
-A toolkit for building call experience [Cloudflare Realtime](https://developers.cloudflare.com/realtime/).
+A toolkit for building realtime call experiences with [Cloudflare Realtime](https://developers.cloudflare.com/realtime/).
 
 CallsKit provides vanilla JS APIs as well as React hooks that makes development with the core APIs easier in React.
 
