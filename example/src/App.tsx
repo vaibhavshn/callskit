@@ -34,7 +34,7 @@ function App() {
 			room,
 			displayName: 'User ' + Math.random().toString(36).substring(7),
 			logLevel: 'debug',
-			config: { preferredCameraQuality: 'high' },
+			config: { preferredCameraQuality: 'f' },
 			autoJoin: window.location.hash === '#join',
 			socketBaseUrl: ENV.SOCKET_URL,
 			apiBaseUrl: ENV.API_URL,
