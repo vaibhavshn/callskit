@@ -1,6 +1,6 @@
 {
 	"name": "callskit",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "A toolkit for building call experience using Cloudflare Realtime",
 	"type": "module",
 	"sideEffects": false,
