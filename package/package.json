@@ -64,5 +64,14 @@
 	"peerDependencies": {
 		"partykit": "^0.0.115",
 		"react": ">=16.8"
-	}
+	},
+	"keywords": [
+		"realtime",
+		"cloudflare",
+		"toolkit",
+		"audio",
+		"video",
+		"sdk",
+		"call"
+	]
 }
