@@ -16,7 +16,6 @@ export function ScreenshareTile({
 	const isSelf = call.self.id === participant.id;
 
 	useEffect(() => {
-		console.log(participant.screenshareEnabled, participant.screenshareTracks);
 		if (
 			participant.screenshareEnabled &&
 			participant.screenshareTracks?.video
