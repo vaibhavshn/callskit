@@ -116,8 +116,8 @@ export function CameraQualitySelector() {
 			}
 			className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-zinc-900 dark:text-white dark:outline-zinc-700"
 		>
-			<option value="high">💯 High Quality</option>
-			<option value="low">🛜 Data Saver</option>
+			<option value="a">💯 High Quality</option>
+			<option value="b">🛜 Data Saver</option>
 		</select>
 	);
 }

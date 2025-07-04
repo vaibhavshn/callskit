@@ -92,7 +92,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 			call: this,
 			logger: this.#logger,
 			cameraRid$: new BehaviorSubject<VideoEncodingRid>(
-				options.config?.preferredCameraQuality ?? 'f',
+				options.config?.preferredCameraQuality ?? 'a',
 			),
 			cameraEncodings$: new BehaviorSubject<RTCRtpEncodingParameters[]>(
 				cameraEncodings,
@@ -133,7 +133,7 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 	 * - `h` - half quality
 	 */
 	setRemoteCameraTrackQuality(quality: VideoEncodingRid) {
-		const qualities: VideoEncodingRid[] = ['f', 'h'];
+		const qualities: VideoEncodingRid[] = ['a', 'b'];
 		if (qualities.includes(quality)) {
 			const oldQuality = this.#ctx.cameraRid$.value;
 			this.#ctx.cameraRid$.next(quality);
