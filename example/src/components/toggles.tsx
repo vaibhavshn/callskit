@@ -95,6 +95,10 @@ export function ChatToggle(props: ButtonProps) {
 export function SettingsToggle() {
 	const store = useMeetingStore();
 
+	if (!('getDisplayMedia' in navigator.mediaDevices)) {
+		return null;
+	}
+
 	return (
 		<ControlbarButton
 			onClick={() => store.setSettingsOpen(!store.settingsOpen)}
@@ -103,6 +107,14 @@ export function SettingsToggle() {
 		</ControlbarButton>
 	);
 }
+
+const cameraQualityOptions = [
+	{ value: 'a', label: '💯 High Quality' },
+	{ value: 'b', label: '🛜 Data Saver' },
+] satisfies {
+	value: VideoEncodingRid;
+	label: string;
+}[];
 
 export function CameraQualitySelector() {
 	const call = useCall();
@@ -116,8 +128,11 @@ export function CameraQualitySelector() {
 			}
 			className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-zinc-900 dark:text-white dark:outline-zinc-700"
 		>
-			<option value="a">💯 High Quality</option>
-			<option value="b">🛜 Data Saver</option>
+			{cameraQualityOptions.map((value) => (
+				<option key={value.value} value={value.value}>
+					{value.label}
+				</option>
+			))}
 		</select>
 	);
 }
