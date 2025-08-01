@@ -1,6 +1,7 @@
 {
 	"name": "callskit",
-	"version": "0.0.4",
+	"version": "0.0.5",
+	"license": "MIT",
 	"description": "A toolkit for building call experience using Cloudflare Realtime",
 	"type": "module",
 	"sideEffects": false,
