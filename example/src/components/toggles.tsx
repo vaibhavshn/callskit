@@ -51,6 +51,14 @@ export function CameraToggle() {
 }
 
 export function ScreenshareToggle() {
+	const isSupported = 'getDisplayMedia' in navigator.mediaDevices;
+	if (!isSupported) {
+		return null;
+	}
+	return <ScreenshareToggleView />;
+}
+
+export function ScreenshareToggleView() {
 	const call = useCall();
 	const screenshareEnabled = useCallSelector(
 		(call) => call.self.screenshareEnabled,
