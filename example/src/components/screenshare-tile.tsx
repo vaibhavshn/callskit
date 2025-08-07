@@ -46,6 +46,7 @@ export function ScreenshareTile({
 				)}
 				autoPlay
 				muted
+				playsInline
 			/>
 
 			{/* Name Tag */}

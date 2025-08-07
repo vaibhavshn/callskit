@@ -52,6 +52,7 @@ export function ParticipantTile({
 					'absolute inset-0 z-30 size-full object-cover transition-opacity',
 					participant.cameraEnabled ? 'opacity-100' : 'opacity-0',
 				)}
+				playsInline
 			/>
 
 			{/* Avatar */}
