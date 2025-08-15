@@ -27,7 +27,7 @@ export function Sidebar({ className, ...props }: SidebarProps) {
 			exit={{ x: 120 }}
 			transition={{ duration: 0.2 }}
 			className={clsx(
-				'relative h-full w-full mr-3 max-w-xs rounded-lg border border-zinc-200 bg-white dark:bg-gray-950',
+				'relative mr-3 h-full w-full max-w-xs rounded-lg border border-zinc-200 bg-white dark:bg-gray-950',
 				className,
 			)}
 			{...props}

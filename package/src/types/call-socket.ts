@@ -1,3 +1,5 @@
+import type { TrackMetadata } from 'partytracks/client';
+
 export type SerializableObject = {
 	[key: string]:
 		| string
@@ -13,14 +15,14 @@ export interface SerializedUser {
 	name: string;
 
 	micEnabled: boolean;
-	micTrackId?: string;
+	micTrackData?: TrackMetadata;
 
 	cameraEnabled: boolean;
-	cameraTrackId?: string;
+	cameraTrackData?: TrackMetadata;
 
 	screenshareEnabled: boolean;
-	screenshareVideoTrackId?: string;
-	screenshareAudioTrackId?: string;
+	screenshareVideoTrackData?: TrackMetadata;
+	screenshareAudioTrackData?: TrackMetadata;
 }
 
 export type { CallEvent } from './call-events';

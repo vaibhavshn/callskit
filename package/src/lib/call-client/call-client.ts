@@ -32,8 +32,6 @@ export type CallClientOptions = {
 	logLevel?: LogLevel;
 };
 
-setLogLevel('debug');
-
 export class CallClient extends EventsHandler<CallClientEvents> {
 	room: string;
 	state: undefined | 'connected' | 'joined' | 'left' = undefined;
@@ -54,8 +52,10 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 
 		this.#logger = new Logger({
 			level: options.logLevel ?? 'warn',
-			// prefix: 'callskit',
+			prefix: 'callskit',
 		});
+
+		setLogLevel(options.logLevel ?? 'warn');
 
 		const socket = new CallSocket({
 			room: this.room,
@@ -128,9 +128,9 @@ export class CallClient extends EventsHandler<CallClientEvents> {
 	}
 
 	/**
-	 * Set the remote camera track quality.
-	 * - `f` - full quality
-	 * - `h` - half quality
+	 * Set the preferred remote camera track quality.
+	 * - `a` - full quality
+	 * - `b` - half quality
 	 */
 	setRemoteCameraTrackQuality(quality: VideoEncodingRid) {
 		const qualities: VideoEncodingRid[] = ['a', 'b'];

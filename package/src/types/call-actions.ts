@@ -1,21 +1,22 @@
+import type { TrackMetadata } from 'partytracks/client';
 import type { ChatMessagePayload } from '../lib/call-chat/call-chat';
 import type { SerializedUser } from './call-socket';
 
 export type MediaAction =
 	| {
 			action: 'self/mic-update';
-			updates: { micEnabled: boolean; micTrackId?: string };
+			updates: { micEnabled: boolean; micTrackData?: TrackMetadata };
 	  }
 	| {
 			action: 'self/camera-update';
-			updates: { cameraEnabled: boolean; cameraTrackId?: string };
+			updates: { cameraEnabled: boolean; cameraTrackData?: TrackMetadata };
 	  }
 	| {
 			action: 'self/screenshare-update';
 			updates: {
 				screenshareEnabled: boolean;
-				screenshareVideoTrackId?: string;
-				screenshareAudioTrackId?: string;
+				screenshareVideoTrackData?: TrackMetadata;
+				screenshareAudioTrackData?: TrackMetadata;
 			};
 	  };
 

@@ -7,7 +7,10 @@ type CallEvents = {
 
 	mediaConnected: () => void;
 
-	cameraQualityChanged: (newQuality: VideoEncodingRid, oldQuality: VideoEncodingRid) => void;
+	cameraQualityChanged: (
+		newQuality: VideoEncodingRid,
+		oldQuality: VideoEncodingRid,
+	) => void;
 };
 
 export type CallClientEvents = CallEvents;

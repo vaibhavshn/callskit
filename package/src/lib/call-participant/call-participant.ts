@@ -1,24 +1,23 @@
-import { BehaviorSubject, filter, of, switchMap } from 'rxjs';
+import { BehaviorSubject, filter, of } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
 import { EventsHandler } from '../../utils/events-handler';
 import type { CallParticipantEvents } from './call-participant-events';
 import { type TrackMetadata } from 'partytracks/client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
-import { parseTrackId } from '../../utils/tracks';
 
 interface CallParticipantOptions extends Partial<SerializedUser> {
 	id: string;
 	name: string;
 
 	micEnabled?: boolean;
-	micTrackId?: string;
+	micTrackData?: TrackMetadata;
 
 	cameraEnabled?: boolean;
-	cameraTrackId?: string;
+	cameraTrackData?: TrackMetadata;
 
 	screenshareEnabled?: boolean;
-	screenshareVideoTrackId?: string;
-	screenshareAudioTrackId?: string;
+	screenshareVideoTrackData?: TrackMetadata;
+	screenshareAudioTrackData?: TrackMetadata;
 }
 
 export class CallParticipant extends EventsHandler<CallParticipantEvents> {
@@ -28,20 +27,20 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 	#ctx: CallContext;
 
 	#micEnabled$: BehaviorSubject<boolean>;
-	#micTrackId$: BehaviorSubject<string | undefined>;
+	#micTrackData$: BehaviorSubject<TrackMetadata | undefined>;
 
 	#micEnabled: boolean = false;
 	#micTrack: MediaStreamTrack | undefined;
 
 	#cameraEnabled$: BehaviorSubject<boolean>;
-	#cameraTrackId$: BehaviorSubject<string | undefined>;
+	#cameraTrackData$: BehaviorSubject<TrackMetadata | undefined>;
 
 	#cameraEnabled: boolean = false;
 	#cameraTrack: MediaStreamTrack | undefined;
 
 	#screenshareEnabled$: BehaviorSubject<boolean> = new BehaviorSubject(false);
-	#screenshareVideoTrackId$: BehaviorSubject<string | undefined>;
-	#screenshareAudioTrackId$: BehaviorSubject<string | undefined>;
+	#screenshareVideoTrackData$: BehaviorSubject<TrackMetadata | undefined>;
+	#screenshareAudioTrackData$: BehaviorSubject<TrackMetadata | undefined>;
 
 	#screenshareEnabled: boolean = false;
 	#screenshareVideoTrack: MediaStreamTrack | undefined;
@@ -58,26 +57,34 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			options.micEnabled || false,
 		);
 
-		this.#micTrackId$ = new BehaviorSubject<string | undefined>(
-			options.micEnabled ? options.micTrackId : undefined,
+		this.#micTrackData$ = new BehaviorSubject<TrackMetadata | undefined>(
+			options.micEnabled ? options.micTrackData : undefined,
 		);
 
 		this.#cameraEnabled$ = new BehaviorSubject<boolean>(
 			options.cameraEnabled || false,
 		);
 
-		this.#cameraTrackId$ = new BehaviorSubject<string | undefined>(
-			options.cameraEnabled ? options.cameraTrackId : undefined,
+		this.#cameraTrackData$ = new BehaviorSubject<TrackMetadata | undefined>(
+			options.cameraEnabled ? options.cameraTrackData : undefined,
 		);
 
 		this.#screenshareEnabled = options.screenshareEnabled || false;
 
-		this.#screenshareVideoTrackId$ = new BehaviorSubject<string | undefined>(
-			options.screenshareEnabled ? options.screenshareVideoTrackId : undefined,
+		this.#screenshareVideoTrackData$ = new BehaviorSubject<
+			TrackMetadata | undefined
+		>(
+			options.screenshareEnabled
+				? options.screenshareVideoTrackData
+				: undefined,
 		);
 
-		this.#screenshareAudioTrackId$ = new BehaviorSubject<string | undefined>(
-			options.screenshareEnabled ? options.screenshareAudioTrackId : undefined,
+		this.#screenshareAudioTrackData$ = new BehaviorSubject<
+			TrackMetadata | undefined
+		>(
+			options.screenshareEnabled
+				? options.screenshareAudioTrackData
+				: undefined,
 		);
 
 		this.#micEnabled$.subscribe((enabled) => {
@@ -96,17 +103,7 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			}
 		});
 
-		const micMetadata$ = this.#micTrackId$.pipe(
-			filter((id) => typeof id === 'string'),
-			switchMap((id) => {
-				const { sessionId, trackName } = parseTrackId(id);
-				return of({
-					sessionId,
-					trackName,
-					location: 'remote',
-				} satisfies TrackMetadata);
-			}),
-		);
+		const micMetadata$ = this.#micTrackData$.pipe(filter(Boolean));
 
 		const micTrack$ = this.#ctx.partyTracks.pull(micMetadata$);
 
@@ -135,20 +132,12 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			}
 		});
 
-		const cameraMetadata$ = this.#cameraTrackId$.pipe(
-			filter((id) => typeof id === 'string'),
-			switchMap((id) => {
-				const { sessionId, trackName } = parseTrackId(id);
-				return of({
-					sessionId,
-					trackName,
-					location: 'remote',
-				} satisfies TrackMetadata);
-			}),
-		);
+		const cameraMetadata$ = this.#cameraTrackData$.pipe(filter(Boolean));
 
 		const cameraTrack$ = this.#ctx.partyTracks.pull(cameraMetadata$, {
-			simulcast: { preferredRid$: this.#ctx.cameraRid$ },
+			simulcast: {
+				preferredRid$: this.#ctx.cameraRid$.asObservable(),
+			},
 		});
 
 		cameraTrack$.subscribe((track) => {
@@ -159,16 +148,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#ctx.call.participants.emit('cameraUpdate', this);
 		});
 
-		const screenshareVideoMetadata$ = this.#screenshareVideoTrackId$.pipe(
-			filter((id) => typeof id === 'string'),
-			switchMap((id) => {
-				const { sessionId, trackName } = parseTrackId(id);
-				return of({
-					sessionId,
-					trackName,
-					location: 'remote',
-				} satisfies TrackMetadata);
-			}),
+		const screenshareVideoMetadata$ = this.#screenshareVideoTrackData$.pipe(
+			filter(Boolean),
 		);
 
 		const screenshareVideoTrack$ = this.#ctx.partyTracks.pull(
@@ -186,16 +167,8 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 			this.#ctx.call.participants.emit('screenshareUpdate', this);
 		});
 
-		const screenshareAudioMetadata$ = this.#screenshareAudioTrackId$.pipe(
-			filter((id) => typeof id === 'string'),
-			switchMap((id) => {
-				const { sessionId, trackName } = parseTrackId(id);
-				return of({
-					sessionId,
-					trackName,
-					location: 'remote',
-				} satisfies TrackMetadata);
-			}),
+		const screenshareAudioMetadata$ = this.#screenshareAudioTrackData$.pipe(
+			filter(Boolean),
 		);
 
 		const screenshareAudioTrack$ = this.#ctx.partyTracks.pull(
@@ -214,10 +187,13 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 		});
 	}
 
-	updateMicState(updates: { micEnabled: boolean; micTrackId?: string }) {
+	updateMicState(updates: {
+		micEnabled: boolean;
+		micTrackData?: TrackMetadata;
+	}) {
 		this.#ctx.logger.debug('🎙️ participant mic state updated', updates);
-		if (updates.micEnabled && updates.micTrackId) {
-			this.#micTrackId$.next(updates.micTrackId);
+		if (updates.micEnabled && updates.micTrackData) {
+			this.#micTrackData$.next(updates.micTrackData);
 			this.#micEnabled$.next(true);
 		} else {
 			this.#micEnabled$.next(false);
@@ -226,36 +202,41 @@ export class CallParticipant extends EventsHandler<CallParticipantEvents> {
 
 	updateCameraState(updates: {
 		cameraEnabled: boolean;
-		cameraTrackId?: string;
+		cameraTrackData?: TrackMetadata;
 	}) {
 		this.#ctx.logger.debug('🎥 participant camera state updated', updates);
-		if (updates.cameraEnabled && updates.cameraTrackId) {
-			this.#cameraTrackId$.next(updates.cameraTrackId);
+		if (updates.cameraEnabled && updates.cameraTrackData) {
+			this.#cameraTrackData$.next(updates.cameraTrackData);
 			this.#cameraEnabled$.next(true);
 		} else {
+			this.#cameraTrackData$.next(undefined);
 			this.#cameraEnabled$.next(false);
 		}
 	}
 
 	updateScreenshareState(updates: {
 		screenshareEnabled: boolean;
-		screenshareVideoTrackId?: string;
-		screenshareAudioTrackId?: string;
+		screenshareVideoTrackData?: TrackMetadata;
+		screenshareAudioTrackData?: TrackMetadata;
 	}) {
 		this.#ctx.logger.debug('🖥️ participant screenshare state updated', updates);
 		if (updates.screenshareEnabled) {
-			if (updates.screenshareVideoTrackId) {
-				this.#screenshareVideoTrackId$.next(updates.screenshareVideoTrackId);
+			if (updates.screenshareVideoTrackData) {
+				this.#screenshareVideoTrackData$.next(
+					updates.screenshareVideoTrackData,
+				);
 			}
-			if (updates.screenshareAudioTrackId) {
-				this.#screenshareAudioTrackId$.next(updates.screenshareAudioTrackId);
+			if (updates.screenshareAudioTrackData) {
+				this.#screenshareAudioTrackData$.next(
+					updates.screenshareAudioTrackData,
+				);
 			}
 			this.#screenshareEnabled$.next(true);
 			this.#screenshareEnabled = true;
 		} else {
 			this.#screenshareEnabled$.next(false);
-			this.#screenshareVideoTrackId$.next(undefined);
-			this.#screenshareAudioTrackId$.next(undefined);
+			this.#screenshareVideoTrackData$.next(undefined);
+			this.#screenshareAudioTrackData$.next(undefined);
 			this.#screenshareEnabled = false;
 			this.emit('screenshareUpdate', { screenshareEnabled: false });
 			this.#ctx.call.participants.joined.emit('screenshareUpdate', this);

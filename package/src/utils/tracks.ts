@@ -1,6 +1,5 @@
 import invariant from 'tiny-invariant';
 import { Observable } from 'rxjs';
-import type { TrackMetadata } from 'partytracks/client';
 
 export const blackCanvasStreamTrack$ = new Observable<MediaStreamTrack>(
 	(subscriber) => {
@@ -75,12 +74,3 @@ export const inaudibleAudioTrack$ = new Observable<MediaStreamTrack>(
 		};
 	},
 );
-
-export function createTrackId(metadata: TrackMetadata) {
-	return `${metadata.sessionId}/${metadata.trackName}`;
-}
-
-export function parseTrackId(trackId: string) {
-	const [sessionId, trackName] = trackId.split('/');
-	return { sessionId, trackName };
-}

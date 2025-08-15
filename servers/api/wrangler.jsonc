@@ -2,5 +2,5 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "callskit-server",
 	"main": "src/index.ts",
-	"compatibility_date": "2025-03-17"
+	"compatibility_date": "2025-03-17",
 }

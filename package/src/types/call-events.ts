@@ -1,3 +1,4 @@
+import type { TrackMetadata } from 'partytracks/client';
 import type { ChatMessage } from '../lib/call-chat/call-chat';
 import type { SerializedUser } from './call-socket';
 
@@ -19,7 +20,7 @@ export type ParticipantEvent =
 			event: 'participant/camera-update';
 			data: {
 				cameraEnabled: boolean;
-				cameraTrackId?: string;
+				cameraTrackId?: TrackMetadata;
 				participantId: string;
 			};
 	  }
@@ -27,7 +28,7 @@ export type ParticipantEvent =
 			event: 'participant/mic-update';
 			data: {
 				micEnabled: boolean;
-				micTrackId?: string;
+				micTrackId?: TrackMetadata;
 				participantId: string;
 			};
 	  }
@@ -35,8 +36,8 @@ export type ParticipantEvent =
 			event: 'participant/screenshare-update';
 			data: {
 				screenshareEnabled: boolean;
-				screenshareVideoTrackId?: string;
-				screenshareAudioTrackId?: string;
+				screenshareVideoTrackId?: TrackMetadata;
+				screenshareAudioTrackId?: TrackMetadata;
 				participantId: string;
 			};
 	  };

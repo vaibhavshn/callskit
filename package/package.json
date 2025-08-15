@@ -48,7 +48,6 @@
 	],
 	"scripts": {
 		"build": "NODE_ENV=production tsup",
-		"build:watch": "tsup --watch --sourcemap",
 		"dev": "tsup --watch --sourcemap"
 	},
 	"dependencies": {

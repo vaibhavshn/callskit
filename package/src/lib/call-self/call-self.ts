@@ -5,6 +5,7 @@ import {
 	getScreenshare,
 	type MediaDevice,
 	type Screenshare,
+	type TrackMetadata,
 } from 'partytracks/client';
 import { of } from 'rxjs';
 import type { SerializedUser } from '../../types/call-socket';
@@ -12,7 +13,6 @@ import { EventsHandler } from '../../utils/events-handler';
 import { type CallClientOptions } from '../call-client/call-client';
 import { getCurrentCallContext, type CallContext } from '../call-context';
 import type { CallSelfEvents } from './call-self-events';
-import { createTrackId } from '../../utils/tracks';
 
 export type CallSelfOptions = {
 	name: string;
@@ -36,17 +36,17 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 	#screenshare: Screenshare;
 
 	#micEnabled: boolean = false;
-	#micTrackId: string | undefined;
+	#micTrackData: TrackMetadata | undefined;
 	#micTrack: MediaStreamTrack | undefined;
 
 	#cameraEnabled: boolean = false;
-	#cameraTrackId: string | undefined;
+	#cameraTrackData: TrackMetadata | undefined;
 	#cameraTrack: MediaStreamTrack | undefined;
 
 	#screenshareEnabled: boolean = false;
-	#screenshareVideoTrackId: string | undefined;
+	#screenshareVideoTrackData: TrackMetadata | undefined;
 	#screenshareVideoTrack: MediaStreamTrack | undefined;
-	#screenshareAudioTrackId: string | undefined;
+	#screenshareAudioTrackData: TrackMetadata | undefined;
 	#screenshareAudioTrack: MediaStreamTrack | undefined;
 
 	#micDevice: MediaDeviceInfo | undefined;
@@ -101,13 +101,12 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 
 		micMetadata$.subscribe((metadata) => {
 			if (this.#micEnabled && this.#micTrack) {
-				const micTrackId = createTrackId(metadata);
-				this.#micTrackId = micTrackId;
+				this.#micTrackData = metadata;
 				this.#ctx.socket.sendAction({
 					action: 'self/mic-update',
 					updates: {
 						micEnabled: true,
-						micTrackId,
+						micTrackData: metadata,
 					},
 				});
 				this.emit('micUpdate', {
@@ -126,19 +125,18 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 		const cameraMetadata$ = this.#ctx.partyTracks.push(
 			this.#camera.broadcastTrack$,
 			{
-				sendEncodings$: this.#ctx.cameraEncodings$,
+				sendEncodings$: this.#ctx.cameraEncodings$.asObservable(),
 			},
 		);
 
 		cameraMetadata$.subscribe((metadata) => {
 			if (this.#cameraEnabled && this.#cameraTrack) {
-				const cameraTrackId = createTrackId(metadata);
-				this.#cameraTrackId = cameraTrackId;
+				this.#cameraTrackData = metadata;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
 					updates: {
 						cameraEnabled: true,
-						cameraTrackId,
+						cameraTrackData: metadata,
 					},
 				});
 				this.emit('cameraUpdate', {
@@ -146,7 +144,7 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 					cameraTrack: this.#cameraTrack,
 				});
 			} else if (!this.#cameraEnabled) {
-				this.#cameraTrackId = undefined;
+				this.#cameraTrackData = undefined;
 				this.#ctx.socket.sendAction({
 					action: 'self/camera-update',
 					updates: { cameraEnabled: false },
@@ -195,12 +193,12 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('screenshareUpdate', { screenshareEnabled: false });
 			} else {
-				this.#screenshareVideoTrackId = createTrackId(metadata);
+				this.#screenshareVideoTrackData = metadata;
 				this.#ctx.socket.sendAction({
 					action: 'self/screenshare-update',
 					updates: {
 						screenshareEnabled: true,
-						screenshareVideoTrackId: this.#screenshareVideoTrackId,
+						screenshareVideoTrackData: this.#screenshareVideoTrackData,
 					},
 				});
 				this.emit('screenshareUpdate', {
@@ -220,12 +218,12 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 				});
 				this.emit('screenshareUpdate', { screenshareEnabled: false });
 			} else {
-				this.#screenshareAudioTrackId = createTrackId(metadata);
+				this.#screenshareAudioTrackData = metadata;
 				this.#ctx.socket.sendAction({
 					action: 'self/screenshare-update',
 					updates: {
 						screenshareEnabled: true,
-						screenshareAudioTrackId: this.#screenshareAudioTrackId,
+						screenshareAudioTrackData: this.#screenshareAudioTrackData,
 					},
 				});
 				this.emit('screenshareUpdate', {
@@ -343,12 +341,12 @@ export class CallSelf extends EventsHandler<CallSelfEvents> {
 			id: this.id,
 			name: this.name,
 			micEnabled: this.micEnabled,
-			micTrackId: this.#micTrackId,
+			micTrackData: this.#micTrackData,
 			cameraEnabled: this.cameraEnabled,
-			cameraTrackId: this.#cameraTrackId,
+			cameraTrackData: this.#cameraTrackData,
 			screenshareEnabled: this.screenshareEnabled,
-			screenshareVideoTrackId: this.#screenshareVideoTrackId,
-			screenshareAudioTrackId: this.#screenshareAudioTrackId,
+			screenshareVideoTrackData: this.#screenshareVideoTrackData,
+			screenshareAudioTrackData: this.#screenshareAudioTrackData,
 		};
 	}
 

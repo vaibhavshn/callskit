@@ -1,12 +1,12 @@
 import type * as Party from 'partykit/server';
 import { createEvent, parseAction } from './helpers';
 import type { User } from './types';
-import type { ChatMessage } from '..';
+import type { CallEvent, ChatMessage } from '..';
 
 export class PartyKitServer implements Party.Server {
 	started_at!: Date;
 
-	connectionIds: string[] = [];
+	waiting_user_ids = new Set<string>();
 
 	users = new Map<string, User>();
 
@@ -28,7 +28,7 @@ export class PartyKitServer implements Party.Server {
   room: ${this.room.id}
   url: ${new URL(ctx.request.url).pathname}`,
 		);
-		this.connectionIds.push(conn.id);
+		this.waiting_user_ids.add(conn.id);
 		conn.send(createEvent({ event: 'connected' }));
 	}
 
@@ -36,11 +36,9 @@ export class PartyKitServer implements Party.Server {
 		const user = this.users.get(connection.id);
 		if (user) {
 			this.users.delete(connection.id);
-			this.connectionIds = this.connectionIds.filter(
-				(id) => id !== connection.id,
-			);
-			this.room.broadcast(
-				createEvent({ event: 'participant/left', participantId: user.id }),
+			this.waiting_user_ids.delete(connection.id);
+			this.broadcastToUsers(
+				{ event: 'participant/left', participantId: user.id },
 				[connection.id],
 			);
 		}
@@ -59,25 +57,21 @@ export class PartyKitServer implements Party.Server {
 		switch (payload.action) {
 			case 'join': {
 				const user: User = { ...payload.self, connectionId: sender.id };
-				const without = [...this.users.keys(), ...this.connectionIds];
-				this.room.broadcast(
+				this.waiting_user_ids.delete(sender.id);
+				sender.send(
 					createEvent({
 						event: 'room/init',
 						participants: [...this.users.values()],
 						started_at: this.started_at.toISOString(),
 						chatMessages: this.chat,
 					}),
-					without.filter((id) => id !== sender.id),
-				);
-				this.connectionIds = this.connectionIds.filter(
-					(id) => id !== sender.id,
 				);
 				this.users.set(sender.id, user);
-				this.room.broadcast(
-					createEvent({
+				this.broadcastToUsers(
+					{
 						event: 'participant/joined',
 						participant: payload.self,
-					}),
+					},
 					[sender.id],
 				);
 				break;
@@ -86,11 +80,11 @@ export class PartyKitServer implements Party.Server {
 			case 'leave': {
 				if (user) {
 					this.users.delete(sender.id);
-					this.room.broadcast(
-						createEvent({
+					this.broadcastToUsers(
+						{
 							event: 'participant/left',
 							participantId: user.id,
-						}),
+						},
 						[sender.id],
 					);
 				}
@@ -100,11 +94,11 @@ export class PartyKitServer implements Party.Server {
 			case 'self/mic-update': {
 				if (user) {
 					Object.assign(user, payload.updates);
-					this.room.broadcast(
-						createEvent({
+					this.broadcastToUsers(
+						{
 							event: 'participant/mic-update',
 							data: { ...payload.updates, participantId: user.id },
-						}),
+						},
 						[sender.id],
 					);
 				}
@@ -114,11 +108,11 @@ export class PartyKitServer implements Party.Server {
 			case 'self/camera-update': {
 				if (user) {
 					Object.assign(user, payload.updates);
-					this.room.broadcast(
-						createEvent({
+					this.broadcastToUsers(
+						{
 							event: 'participant/camera-update',
 							data: { ...payload.updates, participantId: user.id },
-						}),
+						},
 						[sender.id],
 					);
 				}
@@ -128,11 +122,11 @@ export class PartyKitServer implements Party.Server {
 			case 'self/screenshare-update': {
 				if (user) {
 					Object.assign(user, payload.updates);
-					this.room.broadcast(
-						createEvent({
+					this.broadcastToUsers(
+						{
 							event: 'participant/screenshare-update',
 							data: { ...payload.updates, participantId: user.id },
-						}),
+						},
 						[sender.id],
 					);
 				}
@@ -149,13 +143,18 @@ export class PartyKitServer implements Party.Server {
 						created_at: new Date(),
 					};
 					this.chat.push(message);
-					this.room.broadcast(
-						createEvent({ event: 'chat/new-message', message }),
-					);
+					this.broadcastToUsers({ event: 'chat/new-message', message });
 				}
 				break;
 			}
 		}
+	}
+
+	broadcastToUsers(event: CallEvent, without: string[] = []) {
+		this.room.broadcast(JSON.stringify(event), [
+			...this.waiting_user_ids,
+			...without,
+		]);
 	}
 }
 
