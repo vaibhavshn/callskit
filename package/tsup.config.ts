@@ -21,8 +21,9 @@ export default defineConfig([
 		dts: true,
 		treeshake: true,
 		external: ['react'],
-		sourcemap: isProd ? false : true,
-		watch: isProd ? false : true,
+		sourcemap: !isProd,
+		watch: !isProd,
+		clean: true,
 	},
 	{
 		entry: {
@@ -31,7 +32,8 @@ export default defineConfig([
 		format: 'esm',
 		dts: true,
 		external: ['partykit'],
-		sourcemap: isProd ? false : true,
-		watch: isProd ? false : true,
+		sourcemap: !isProd,
+		watch: !isProd,
+		clean: true,
 	},
 ]);
