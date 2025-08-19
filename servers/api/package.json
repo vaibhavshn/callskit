@@ -5,12 +5,12 @@
 		"deploy": "wrangler deploy --minify"
 	},
 	"dependencies": {
-		"hono": "^4.7.11",
+		"hono": "^4.9.2",
 		"callskit": "*"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20250610.0",
-		"@types/node": "^24.0.0",
-		"wrangler": "^4.19.1"
+		"@cloudflare/workers-types": "^4.20250819.0",
+		"@types/node": "^24.3.0",
+		"wrangler": "^4.31.0"
 	}
 }
